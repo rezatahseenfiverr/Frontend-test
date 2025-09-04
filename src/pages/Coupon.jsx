@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaSearch } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaSearch, FaTicketAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const CouponManagement = () => {
@@ -264,163 +264,169 @@ const CouponManagement = () => {
     : [];
 
   return (
-    <div className="flex flex-col items-center md:pt-40 justify-start min-h-screen bg-gray-100 p-4 sm:p-8 sm:ml-64">
-      <div className="w-full max-w-5xl mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition flex items-center gap-2"
-        >
-          <FaArrowLeft /> Back
-        </button>
-        <h1 className="text-2xl font-bold text-center sm:text-left">Coupon Management</h1>
-        <div className="relative w-full sm:w-auto">
+    <div className="flex flex-col items-center justify-start min-h-screen bg-gray-100 p-20 sm:ml-64">
+      <div className="w-full max-w-5xl mb-8 flex justify-between items-center">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-700 hover:text-gray-900 transition"
+            aria-label="Go Back"
+          >
+            <FaArrowLeft className="text-2xl" />
+          </button>
+          <h1 className="text-3xl sm:text-4xl font-bold">Coupon Management</h1>
+        </div>
+        <div className="flex items-center bg-white rounded-md shadow-sm">
+          <FaSearch className="text-gray-400 ml-2" />
           <input
             type="text"
             placeholder="Search coupons..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="border border-gray-300 bg-white rounded px-4 py-2 pl-10 w-full"
+            className="px-4 py-2 w-64 rounded-r-md focus:outline-none bg-white focus:ring-2 focus:ring-blue-500"
           />
-          <FaSearch className="absolute left-3 top-3 text-gray-400" />
         </div>
+        <button
+          onClick={handleAddOrUpdateCoupon}
+          className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition ml-4"
+          disabled={!code || !discount || !expirationDate}
+        >
+          <FaPlus className="mr-2" /> {editingCoupon ? 'Update Coupon' : 'Add Coupon'}
+        </button>
       </div>
 
       {/* Coupon Add/Edit Form */}
-      <div className="w-full max-w-5xl bg-white p-4 rounded-lg shadow mb-8">
-        <h2 className="text-xl font-semibold mb-4">
-          {editingCoupon ? "Edit Coupon" : "Add New Coupon"}
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code</label>
-            <input
-              type="text"
-              placeholder="e.g. SAVE20"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="border border-gray-300 bg-white rounded px-4 py-2 w-full"
-              required
-            />
-          </div>
+      <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 w-full max-w-5xl mb-8">
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 flex items-center">
+            <FaTicketAlt className="mr-2 text-blue-500" />
+            {editingCoupon ? "Edit Coupon" : "Add New Coupon"}
+          </h2>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Discount (%)</label>
-            <input
-              type="number"
-              placeholder="e.g. 20"
-              value={discount}
-              onChange={(e) => setDiscount(e.target.value)}
-              min="1"
-              max="100"
-              className="border border-gray-300 bg-white rounded px-4 py-2 w-full"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Expiration Date</label>
-            <input
-              type="date"
-              value={expirationDate}
-              onChange={(e) => setExpirationDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-              className="border border-gray-300 bg-white rounded px-4 py-2 w-full"
-              required
-            />
-          </div>
-          
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="isActive"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
-              Active Coupon
-            </label>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Applicable Products</label>
-          <select 
-            multiple 
-            onChange={handleProductSelection} 
-            className="border border-gray-300 bg-white rounded px-4 py-2 w-full h-auto min-h-[100px]"
-            value={selectedProducts}
-            size="5"
-          >
-            <option value="" disabled>Select Products</option>
-            {products.map((product) => (
-              <option key={product._id} value={product._id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple products</p>
-        </div>
-
-        {selectedProducts.map((productId) => {
-          const product = products.find(p => p._id === productId);
-          if (!product) return null;
-          
-          return (
-            <div key={productId} className="mb-4 p-3 border rounded-lg bg-gray-50">
-              <h3 className="font-semibold mb-2">{product.name}</h3>
-              
-              {product.variants?.length > 0 ? (
-                product.variants.map((variant) => (
-                  <div key={variant._id} className="mb-3 ml-2 p-2 border rounded bg-white">
-                    <h4 className="font-medium mb-1">{variant.colorName}</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {variant.sizes?.map((size) => (
-                        <button
-                          key={`${variant._id}-${size}`}
-                          type="button"
-                          onClick={() => handleVariantSelection(
-                            productId, 
-                            variant._id, 
-                            variant.colorName, 
-                            size
-                          )}
-                          className={`px-3 py-1 rounded border text-sm ${
-                            isVariantSelected(productId, variant._id, size)
-                              ? "bg-blue-500 text-white border-blue-500"
-                              : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-sm text-gray-500">No variants available for this product</div>
-              )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code</label>
+              <input
+                type="text"
+                placeholder="e.g. SAVE20"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
             </div>
-          );
-        })}
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Discount (%)</label>
+              <input
+                type="number"
+                placeholder="e.g. 20"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
+                min="1"
+                max="100"
+                className="w-full px-4 py-2 border border-gray-300 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Expiration Date</label>
+              <input
+                type="date"
+                value={expirationDate}
+                onChange={(e) => setExpirationDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-2 border border-gray-300 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
+                Active Coupon
+              </label>
+            </div>
+          </div>
 
-        <div className="flex justify-end gap-3 mt-4">
-          {editingCoupon && (
-            <button
-              onClick={resetForm}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition"
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Applicable Products</label>
+            <select 
+              multiple 
+              onChange={handleProductSelection} 
+              className="w-full px-4 py-2 border border-gray-300 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 h-auto min-h-[100px]"
+              value={selectedProducts}
+              size="5"
             >
-              Cancel
-            </button>
-          )}
-          <button 
-            onClick={handleAddOrUpdateCoupon} 
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-            disabled={!code || !discount || !expirationDate}
-          >
-            {editingCoupon ? "Update Coupon" : "Add Coupon"}
-          </button>
+              <option value="" disabled>Select Products</option>
+              {products.map((product) => (
+                <option key={product._id} value={product._id}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple products</p>
+          </div>
+
+          {selectedProducts.map((productId) => {
+            const product = products.find(p => p._id === productId);
+            if (!product) return null;
+            
+            return (
+              <div key={productId} className="mb-4 p-3 border rounded-lg bg-gray-50">
+                <h3 className="font-semibold mb-2">{product.name}</h3>
+                
+                {product.variants?.length > 0 ? (
+                  product.variants.map((variant) => (
+                    <div key={variant._id} className="mb-3 ml-2 p-2 border rounded bg-white">
+                      <h4 className="font-medium mb-1">{variant.colorName}</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {variant.sizes?.map((size) => (
+                          <button
+                            key={`${variant._id}-${size}`}
+                            type="button"
+                            onClick={() => handleVariantSelection(
+                              productId, 
+                              variant._id, 
+                              variant.colorName, 
+                              size
+                            )}
+                            className={`px-3 py-1 rounded border text-sm ${
+                              isVariantSelected(productId, variant._id, size)
+                                ? "bg-blue-500 text-white border-blue-500"
+                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500">No variants available for this product</div>
+                )}
+              </div>
+            );
+          })}
+
+          <div className="flex justify-end gap-3 mt-4">
+            {editingCoupon && (
+              <button
+                onClick={resetForm}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -440,11 +446,16 @@ const CouponManagement = () => {
           </div>
         ) : loading ? (
           <div className="text-center py-8">
-            <p>Loading coupons...</p>
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <span className="ml-2 text-gray-600">Loading coupons...</span>
+            </div>
           </div>
         ) : filteredCoupons.length === 0 ? (
           <div className="text-center py-8 bg-white rounded-lg shadow">
-            <p>No coupons found</p>
+            <p className="text-gray-500">
+              {searchQuery ? 'No coupons found matching your search.' : 'No coupons found.'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">

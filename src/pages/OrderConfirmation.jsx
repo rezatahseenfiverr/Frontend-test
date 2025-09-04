@@ -98,14 +98,14 @@ export default function OrderConfirmationPage() {
                     <div className="ml-4 flex-1">
                       <div className="flex justify-between">
                         <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
-                        <p className="ml-4 text-sm font-semibold text-gray-900">৳{(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="ml-4 text-sm font-semibold text-gray-900">BDT{(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                       <div className="mt-1 text-sm text-gray-500">
                         {item.size && <span className="mr-3">Size: {item.size}</span>}
                         {item.color && <span>Color: {item.color}</span>}
                       </div>
                       <div className="mt-1 text-sm text-gray-500">
-                        Qty: {item.quantity} × ৳{item.price.toFixed(2)}
+                        Qty: {item.quantity} × BDT{item.price.toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -157,7 +157,7 @@ export default function OrderConfirmationPage() {
                 )}
                 <div className="sm:col-span-1">
                   <dt className="text-sm font-medium text-gray-500">Total Amount</dt>
-                  <dd className="mt-1 text-lg font-semibold text-gray-900">৳{order.totalAmount.toFixed(2)}</dd>
+                  <dd className="mt-1 text-lg font-semibold text-gray-900">BDT{order.totalAmount.toFixed(2)}</dd>
                 </div>
               </dl>
             </div>

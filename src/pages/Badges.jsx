@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaSearch, FaTag } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const BadgeManagement = () => {
@@ -53,11 +53,13 @@ const BadgeManagement = () => {
   };
 
   const handleDeleteBadge = async (id) => {
-    try {
-      await axios.delete(`${import.meta.env.VITE_API_URI}/api/badges/${id}`);
-      setBadges(badges.filter(badge => badge._id !== id));
-    } catch (error) {
-      console.error('Error deleting badge:', error);
+    if (window.confirm('Are you sure you want to delete this badge?')) {
+      try {
+        await axios.delete(`${import.meta.env.VITE_API_URI}/api/badges/${id}`);
+        setBadges(badges.filter(badge => badge._id !== id));
+      } catch (error) {
+        console.error('Error deleting badge:', error);
+      }
     }
   };
 
@@ -79,111 +81,127 @@ const BadgeManagement = () => {
       <div className="w-full max-w-5xl mb-8 flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => navigate(-1)} // Navigate back to the previous page
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition"
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-700 hover:text-gray-900 transition"
+            aria-label="Go Back"
           >
-            <FaArrowLeft /> Back
+            <FaArrowLeft className="text-2xl" />
           </button>
-          <h1 className="text-2xl font-bold">Badge Management</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold">Badge Management</h1>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center bg-white rounded-md shadow-sm">
+          <FaSearch className="text-gray-400 ml-2" />
           <input
             type="text"
             placeholder="Search badges..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="border border-gray-300 bg-white rounded px-4 py-2 mr-2"
+            className="px-4 py-2 w-64 rounded-r-md focus:outline-none bg-white focus:ring-2 focus:ring-blue-500"
           />
-          <FaSearch />
         </div>
+        <button
+          onClick={() => {
+            if (editingBadge) handleUpdateBadge();
+            else handleAddBadge();
+          }}
+          className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition ml-4"
+        >
+          <FaPlus className="mr-2" /> {editingBadge ? 'Update Badge' : 'Add Badge'}
+        </button>
       </div>
 
-      <div className="w-full max-w-5xl bg-white p-4 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Add / Edit Badge</h2>
-        <div className="mb-4 flex items-center">
-          <input
-            type="text"
-            placeholder="Badge Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border border-gray-300 bg-white rounded px-4 py-2 mr-2"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Badge Color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="border border-gray-300 bg-white rounded px-4 py-2 mr-2"
-            required
-          />
-          {editingBadge ? (
-            <button
-              onClick={handleUpdateBadge}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-            >
-              Update Badge
-            </button>
-          ) : (
-            <button
-              onClick={handleAddBadge}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-            >
-              Add Badge
-            </button>
-          )}
+      <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 w-full max-w-5xl">
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 flex items-center">
+            <FaTag className="mr-2 text-blue-500" />
+            {editingBadge ? 'Edit Badge' : 'Add New Badge'}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Badge Name</label>
+              <input
+                type="text"
+                placeholder="Enter badge name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Badge Color (Hex)</label>
+              <input
+                type="text"
+                placeholder="#FF0000"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
         </div>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <h2 className="text-xl font-semibold mb-4">Badges List</h2>
-            <table className="min-w-full bg-white border">
-              <thead>
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="py-3 px-4 border-b text-left font-semibold text-gray-700">Name</th>
+                <th className="py-3 px-4 border-b text-left font-semibold text-gray-700">Color</th>
+                <th className="py-3 px-4 border-b text-center font-semibold text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th className="py-2 px-4 border-b">Name</th>
-                  <th className="py-2 px-4 border-b">Color</th>
-                  <th className="py-2 px-4 border-b">Actions</th>
+                  <td colSpan="3" className="text-center py-8">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                      <span className="ml-2 text-gray-600">Loading badges...</span>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredBadges.length === 0 ? (
-                  <tr>
-                    <td colSpan="3" className="text-center py-4">No badges found.</td>
-                  </tr>
-                ) : (
-                  filteredBadges.map((badge) => (
-                    <tr key={badge._id} className="text-center">
-                      <td className="py-2 px-4 border-b">{badge.name}</td>
-                      <td className="py-2 px-4 border-b flex items-center justify-center space-x-2">
+              ) : filteredBadges.length === 0 ? (
+                <tr>
+                  <td colSpan="3" className="text-center py-8 text-gray-500">
+                    {searchQuery ? 'No badges found matching your search.' : 'No badges found.'}
+                  </td>
+                </tr>
+              ) : (
+                filteredBadges.map((badge) => (
+                  <tr key={badge._id} className="hover:bg-gray-50 border-b">
+                    <td className="py-3 px-4 font-medium text-gray-800">{badge.name}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center space-x-2">
                         <div
-                          className="inline-block w-6 h-6 rounded-full"
+                          className="w-6 h-6 rounded-full border border-gray-300"
                           style={{ backgroundColor: badge.color }}
                         />
-                        <span>{badge.color}</span> {/* Displaying the hex color string */}
-                      </td>
-                      <td className="py-2 px-4 border-b flex justify-center space-x-2">
+                        <span className="text-gray-600">{badge.color}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex justify-center space-x-2">
                         <button
+                          className="flex items-center bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition"
                           onClick={() => startEditing(badge)}
-                          className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
                         >
-                          <FaEdit />
+                          <FaEdit className="mr-1" /> Edit
                         </button>
                         <button
+                          className="flex items-center bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition"
                           onClick={() => handleDeleteBadge(badge._id)}
-                          className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
                         >
-                          <FaTrash />
+                          <FaTrash className="mr-1" /> Delete
                         </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

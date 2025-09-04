@@ -12,6 +12,7 @@ const ProductCreate = () => {
   const [genders, setGenders] = useState([]);
   const [badges, setBadges] = useState([]);
   const [measureTypes, setMeasureTypes] = useState([]);
+  const [shippingTypes, setShippingTypes] = useState([]);
 
   // Product info state
   const [product, setProduct] = useState({
@@ -35,12 +36,13 @@ const ProductCreate = () => {
     sizes: [],
     prices: [],
     discountPrices: [],
-    deliveryTimes: '',
     badgeNames: [],
     badgeColors: [],
-    stock: '',
+    stockBySize: [], // Changed to stockBySize array
     description: '',
     images: [], // Now will be [{file, preview}]
+    shippingIds: [],
+    specifications: [],
   });
 
   const [editingVariantIndex, setEditingVariantIndex] = useState(null);
@@ -54,13 +56,14 @@ const ProductCreate = () => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [categoriesRes, colorsRes, sizesRes, gendersRes, badgesRes, unitsRes] = await Promise.all([
+        const [categoriesRes, colorsRes, sizesRes, gendersRes, badgesRes, unitsRes, shippingRes] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_URI}/api/categories`),
           axios.get(`${import.meta.env.VITE_API_URI}/api/colors`),
           axios.get(`${import.meta.env.VITE_API_URI}/api/sizes`),
           axios.get(`${import.meta.env.VITE_API_URI}/api/genders`),
           axios.get(`${import.meta.env.VITE_API_URI}/api/badges`),
           axios.get(`${import.meta.env.VITE_API_URI}/api/units`),
+          axios.get(`${import.meta.env.VITE_API_URI}/api/shipping`),
         ]);
 
         setCategories(categoriesRes.data);
@@ -69,6 +72,7 @@ const ProductCreate = () => {
         setGenders(gendersRes.data);
         setBadges(badgesRes.data);
         setMeasureTypes(unitsRes.data);
+        setShippingTypes(shippingRes.data || []);
       } catch (error) {
         console.error('Error fetching options:', error);
       }
@@ -88,6 +92,7 @@ const ProductCreate = () => {
     label: `${m.measureType} (${m.unitName})`,
     unitName: m.unitName,
   }));
+  const shippingOptions = shippingTypes.map(s => ({ value: s._id, label: `${s.name} ($${Number(s.charge).toFixed(2)}, ${s.estimatedDays}d)` }));
 
   // Product input change handler
   const handleInputChange = (e) => {
@@ -124,6 +129,32 @@ const ProductCreate = () => {
       sizes: [...prev.sizes, ''],
       prices: [...prev.prices, ''],
       discountPrices: [...prev.discountPrices, ''],
+      stockBySize: [...prev.stockBySize, ''], // Add empty stock for new size
+    }));
+  };
+
+  // Add specification row
+  const addSpecification = () => {
+    setVariant((prev) => ({
+      ...prev,
+      specifications: [...prev.specifications, { name: '', value: '', unit: '' }],
+    }));
+  };
+
+  // Handle specification change by index
+  const handleSpecificationChange = (index, field, value) => {
+    setVariant((prev) => {
+      const updatedSpecs = [...prev.specifications];
+      updatedSpecs[index] = { ...updatedSpecs[index], [field]: value };
+      return { ...prev, specifications: updatedSpecs };
+    });
+  };
+
+  // Remove specification by index
+  const removeSpecification = (index) => {
+    setVariant((prev) => ({
+      ...prev,
+      specifications: prev.specifications.filter((_, i) => i !== index),
     }));
   };
 
@@ -198,7 +229,7 @@ const ProductCreate = () => {
 
   // Add or update variant
   const saveVariant = () => {
-    if (!variant.selectedColor || variant.sizes.length === 0 || !variant.stock) {
+    if (!variant.selectedColor || variant.sizes.length === 0 || !variant.stockBySize.length) {
       alert('Please fill in all required fields for the variant.');
       return;
     }
@@ -233,12 +264,13 @@ const ProductCreate = () => {
       sizes: [],
       prices: [],
       discountPrices: [],
-      deliveryTimes: '',
       badgeNames: [],
       badgeColors: [],
-      stock: '',
+      stockBySize: [],
       description: '',
       images: [],
+      shippingIds: [],
+      specifications: [],
     });
     setEditingVariantIndex(null);
     setIsVariantVisible(false);
@@ -278,12 +310,12 @@ const ProductCreate = () => {
         sizes: [],
         prices: [],
         discountPrices: [],
-        deliveryTimes: '',
         badgeNames: [],
         badgeColors: [],
-        stock: '',
+        stockBySize: [],
         description: '',
         images: [],
+        shippingIds: [],
       });
     }
   };
@@ -298,12 +330,12 @@ const ProductCreate = () => {
       sizes: [],
       prices: [],
       discountPrices: [],
-      deliveryTimes: '',
       badgeNames: [],
       badgeColors: [],
-      stock: '',
+      stockBySize: [],
       description: '',
       images: [],
+      shippingIds: [],
     });
   };
 
@@ -342,13 +374,14 @@ const ProductCreate = () => {
         sizes: variant.sizes,
         prices: variant.prices,
         discountPrices: variant.discountPrices,
-        deliveryTimes: variant.deliveryTimes,
         badgeNames: variant.badgeNames,
         badgeColors: variant.badgeColors,
-        stock: variant.stock,
+        stockBySize: variant.stockBySize, // Changed to stockBySize
         description: variant.description,
         measureType: product.measureType, // <-- include
         unitName: product.unitName,       // <-- include
+        shippingIds: Array.isArray(variant.shippingIds) ? variant.shippingIds : (variant.shippingId ? [variant.shippingId] : []),
+        specifications: Array.isArray(variant.specifications) ? variant.specifications : [],
       }));
 
       formData.append('variants', JSON.stringify(variantsWithoutImages));
@@ -385,10 +418,9 @@ const ProductCreate = () => {
         sizes: [],
         prices: [],
         discountPrices: [],
-        deliveryTimes: '',
         badgeNames: [],
         badgeColors: [],
-        stock: '',
+        stockBySize: [],
         description: '',
         images: [],
       });
@@ -530,9 +562,17 @@ const ProductCreate = () => {
                 <input
                   type="number"
                   name="stock"
-                  placeholder="Stock Quantity"
-                  value={variant.stock}
-                  onChange={handleVariantChange}
+                  placeholder="Total Stock Quantity"
+                  value={variant.stockBySize.reduce((sum, stock) => sum + (parseInt(stock) || 0), 0)}
+                  onChange={(e) => {
+                    const totalStock = parseInt(e.target.value) || 0;
+                    const stockPerSize = variant.sizes.length > 0 ? Math.floor(totalStock / variant.sizes.length) : 0;
+                    const remainder = totalStock % variant.sizes.length;
+                    const newStock = variant.sizes.map((_, index) => 
+                      index < remainder ? stockPerSize + 1 : stockPerSize
+                    );
+                    setVariant(prev => ({ ...prev, stockBySize: newStock }));
+                  }}
                   className="px-4 py-3 border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -548,6 +588,19 @@ const ProductCreate = () => {
                   rows="3"
                   required
                 />
+                <div className="mb-4">
+                  <label className="block mb-2 font-semibold">Shipping Types (multi)</label>
+                  <Select
+                    isMulti
+                    name="shippingIds"
+                    options={shippingOptions}
+                    classNamePrefix="select"
+                    value={shippingOptions.filter(opt => (variant.shippingIds||[]).includes(opt.value))}
+                    onChange={(opts)=> setVariant(prev => ({ ...prev, shippingIds: (opts||[]).map(o=>o.value) }))}
+                    placeholder="Select Shipping Types"
+                    isClearable
+                  />
+                </div>
                 <div className="mb-4">
                   <label className="block mb-2 font-semibold">Variant Images</label>
                   <input
@@ -649,6 +702,18 @@ const ProductCreate = () => {
                       onChange={(e) => handleSizePriceChange(index, e.target.value, 'discountPrices')}
                       className="w-50 px-2 py-1 border bg-white border-gray-300 rounded"
                     />
+                    <input
+                      type="number"
+                      placeholder="Stock"
+                      value={variant.stockBySize[index]}
+                      onChange={(e) => {
+                        const newStock = [...variant.stockBySize];
+                        newStock[index] = e.target.value;
+                        setVariant(prev => ({ ...prev, stockBySize: newStock }));
+                      }}
+                      className="w-50 px-2 py-1 border bg-white border-gray-300 rounded"
+                      required
+                    />
                     <button
                       type="button"
                       className="text-red-600 hover:text-red-800"
@@ -657,10 +722,12 @@ const ProductCreate = () => {
                           const sizes = [...prev.sizes];
                           const prices = [...prev.prices];
                           const discountPrices = [...prev.discountPrices];
+                          const stockBySize = [...prev.stockBySize];
                           sizes.splice(index, 1);
                           prices.splice(index, 1);
                           discountPrices.splice(index, 1);
-                          return { ...prev, sizes, prices, discountPrices };
+                          stockBySize.splice(index, 1);
+                          return { ...prev, sizes, prices, discountPrices, stockBySize };
                         });
                       }}
                     >
@@ -689,14 +756,49 @@ const ProductCreate = () => {
                 isClearable
               />
 
-              <input
-                type="text"
-                name="deliveryTimes"
-                placeholder="Delivery Times (e.g. 2-4 days)"
-                value={variant.deliveryTimes}
-                onChange={handleVariantChange}
-                className="px-4 py-3 border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              {/* Specifications Section */}
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-2 text-gray-800">Specifications</h3>
+                {variant.specifications.map((spec, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      placeholder="Specification Name"
+                      value={spec.name}
+                      onChange={(e) => handleSpecificationChange(index, 'name', e.target.value)}
+                      className="flex-1 px-2 py-1 border bg-white border-gray-300 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Value"
+                      value={spec.value}
+                      onChange={(e) => handleSpecificationChange(index, 'value', e.target.value)}
+                      className="flex-1 px-2 py-1 border bg-white border-gray-300 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Unit (optional)"
+                      value={spec.unit}
+                      onChange={(e) => handleSpecificationChange(index, 'unit', e.target.value)}
+                      className="w-32 px-2 py-1 border bg-white border-gray-300 rounded"
+                    />
+                    <button
+                      type="button"
+                      className="text-red-600 hover:text-red-800"
+                      onClick={() => removeSpecification(index)}
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addSpecification}
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                >
+                  <FaPlus /> Add Specification
+                </button>
+              </div>
 
               <div className="flex gap-4">
                 <button
@@ -765,7 +867,7 @@ const ProductCreate = () => {
                   <span style={{ color: v.selectedColorHex }}>■</span>
                 </p>
                 <p>
-                  <strong>Stock:</strong> {v.stock}
+                  <strong>Stock:</strong> {v.stockBySize.join(', ')}
                 </p>
                 <p>
                   <strong>Description:</strong> {v.description}
@@ -785,8 +887,19 @@ const ProductCreate = () => {
                   <strong>Badges:</strong> {v.badgeNames.join(', ')}
                 </p>
                 <p>
-                  <strong>Delivery Times:</strong> {v.deliveryTimes}
+                  <strong>Specifications:</strong>
                 </p>
+                <ul className="list-disc ml-6">
+                  {v.specifications && v.specifications.length > 0 ? (
+                    v.specifications.map((spec, i) => (
+                      <li key={i}>
+                        {spec.name}: {spec.value} {spec.unit}
+                      </li>
+                    ))
+                  ) : (
+                    <li>No specifications added</li>
+                  )}
+                </ul>
                 <p>
                   <strong>Images:</strong> {v.images.length} file(s) uploaded
                 </p>

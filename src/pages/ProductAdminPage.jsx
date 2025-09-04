@@ -12,15 +12,16 @@ const ProductAdminPage = () => {
     { name: 'Badges', icon: '🏷️' },
     { name: 'Coupons', icon: '💸' },
     { name: 'Slides', icon: '🖼️' },
-    { name: 'Related', icon: '🔗' },
     { name: 'Top Rated', icon: '⭐' },
+    { name: 'Related', icon: '🔗' },
+    { name: 'Shipping', icon: '🚚' },
 
     // New Measure Type menu item
     { name: 'Measure Type', icon: '📐' },
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 sm:ml-64">
+    <div className="flex flex-col items-center bg-gray-100 p-4 sm:ml-64">
       <h1 className="text-3xl sm:text-4xl font-bold my-8 text-center">Choose one</h1>
 
       <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 mb-8 w-full max-w-5xl">

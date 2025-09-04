@@ -1,34 +1,25 @@
-import React, { useState, useContext } from "react";
+import React from "react";
 import { Outlet } from "react-router-dom";
 import UserSidebar from "../components/UserSidebar";
-import { FaBars } from "react-icons/fa";
-import { UserContext } from "../context/UserContext";
 
 const UserLayout = () => {
-  const { authRequest, logout, user } = useContext(UserContext);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
- 
-
   return (
-    <div className="min-h-screen flex bg-gray-100 relative">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
       {/* Sidebar Component */}
       <UserSidebar />
 
-     
-
       {/* Main Content Area */}
-      <div className="flex-grow flex flex-col">
+      <div className="lg:ml-80">
+        {/* Mobile top spacing for header */}
+        <div className="lg:hidden h-20"></div>
         
-
         {/* Outlet Content */}
-        <div className="max-sm:pb-[120px] md:pb-[60px]">
+        <div className="px-4 sm:px-6 lg:px-8 pb-8">
           <Outlet />
         </div>
+        
+        {/* Mobile bottom spacing for bottom navigation */}
+        <div className="lg:hidden h-20"></div>
       </div>
     </div>
   );

@@ -1,14 +1,15 @@
 import { Outlet } from "react-router-dom";
 import { AdminProvider } from "../context/AdminContext";
+import { AdminChatProvider } from "../context/AdminChatContext";
 
-
-// Pass the current admin ID to MessageRoomProvider
 function AdminLayout() {
   return (
     <AdminProvider>
-
-        <Outlet />
-   
+      <AdminChatProvider>
+        <div className="flex flex-col min-h-screen">
+          <Outlet />
+        </div>
+      </AdminChatProvider>
     </AdminProvider>
   );
 }

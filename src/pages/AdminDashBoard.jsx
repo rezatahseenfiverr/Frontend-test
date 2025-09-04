@@ -1,8 +1,10 @@
 import AdminNavbar from '../components/AdminNavbar';
 import Sidebar from '../components/Sidebar';
+import Breadcrumb from '../components/Breadcrumb';
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
+import AdminBreadcrumb from '../components/AdminBreadcrumb';
 
 const AdminDashBoard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -30,7 +32,12 @@ const AdminDashBoard = () => {
     <div className="dark">
       <AdminNavbar toggleSidebar={toggleSidebar} />
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-      <Outlet/>
+      <div className="flex-1">
+        <div className="mt-16 mb-0">
+         <AdminBreadcrumb/>
+        </div>
+        <Outlet/>
+      </div>
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-30 sm:hidden"

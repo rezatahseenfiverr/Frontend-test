@@ -102,7 +102,13 @@ export const UserProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      if (!accessToken) return logout();
+      if (!accessToken) {
+        // No token: keep app in guest mode without redirecting
+        setUser(null);
+        setIsLoggedIn(false);
+        delete axios.defaults.headers.common.Authorization;
+        return;
+      }
 
       axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
@@ -119,7 +125,10 @@ export const UserProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(freshUser));
     } catch (error) {
       console.error('Failed to fetch user data:', error);
-      logout();
+      // Stay in guest mode instead of forcing redirect to login for public pages
+      setUser(null);
+      setIsLoggedIn(false);
+      delete axios.defaults.headers.common.Authorization;
     }
   };
 
@@ -177,6 +186,25 @@ export const UserProvider = ({ children }) => {
 
   const register = async (registerData) => {
     try {
+      // Check if this is a post-registration login (has accessToken)
+      if (registerData.accessToken && registerData.refreshToken && registerData.user) {
+        // This is a post-registration login, not a new registration
+        setUser(registerData.user);
+        setIsLoggedIn(true);
+        setAddress(registerData.user.address || null);
+        setPaymentMethods(registerData.user.paymentMethods || []);
+        setDefaultPaymentMethod(registerData.user.paymentMethods?.find(pm => pm.isDefault) || null);
+        
+        localStorage.setItem('user', JSON.stringify(registerData.user));
+        localStorage.setItem('accessToken', registerData.accessToken);
+        localStorage.setItem('refreshToken', registerData.refreshToken);
+        
+        axios.defaults.headers.common.Authorization = `Bearer ${registerData.accessToken}`;
+        setRedirectPath('/');
+        return;
+      }
+      
+      // Legacy registration flow (should not be used anymore)
       await axios.post(`${API}/api/register`, registerData);
       setRedirectPath('/login');
     } catch (error) {

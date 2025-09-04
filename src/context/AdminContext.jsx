@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const AdminContext = createContext();
 
-const API_BASE_URL = import.meta.env.VITE_API_URI;
+const API_BASE_URL = import.meta.env.VITE_API_URI || "http://localhost:5000";
 
 const initialState = {
   admin: null,

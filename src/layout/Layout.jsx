@@ -1,25 +1,29 @@
 "use client";
 import Navbar from "../components/Navbar";
+import Breadcrumb from "../components/Breadcrumb";
 import { Outlet } from "react-router-dom";
 import MobileTabBar from "../components/TabBar";
+import ChatDrawer from "../components/ChatDrawer";
 import { CartProvider } from "../context/CartContext";
 import { UserProvider } from "../context/UserContext";
-
+import { UserChatProvider } from "../context/UserChatContext";
 
 function Layout() {
   return (
     <UserProvider>
-
-      <CartProvider>
-        
-          <div className="flex flex-col gap-20 min-h-screen">
+      <UserChatProvider>
+        <CartProvider>
+          <div className="flex flex-col min-h-screen">
             <Navbar />
-            <Outlet />
+            <Breadcrumb />
+            <main className="mobile-padding">
+              <Outlet />
+            </main>
             <MobileTabBar />
+            <ChatDrawer />
           </div>
-        
-      </CartProvider>
-
+        </CartProvider>
+      </UserChatProvider>
     </UserProvider>
   );
 }

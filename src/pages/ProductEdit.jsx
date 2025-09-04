@@ -1,9 +1,10 @@
 // frontend/src/components/ProductCreate.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaTrash } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
+import io from 'socket.io-client';
 
 const ProductEdit = () => {
   // State variables for dropdown options
@@ -12,6 +13,7 @@ const ProductEdit = () => {
   const [sizes, setSizes] = useState([]);
   const [genders, setGenders] = useState([]);
   const [badges, setBadges] = useState([]);
+  const [shippingTypes, setShippingTypes] = useState([]);
 
   const {id} = useParams();
   
@@ -28,45 +30,44 @@ const ProductEdit = () => {
     mainImage: null,
   });
 
-  // State for current variant being added
-  const [variant, setVariant] = useState({
-    selectedColor: '',
-    selectedColorHex: '', // Stores the hex code of the selected color
-    sizes: [],
-    prices: [],
-    discountPrices: [],
-    deliveryTimes: '',
-    badgeNames: [],
-    badgeColors: [], // Stores colors corresponding to selected badges
-    stock: '',
-    description: '',
-    images: [],
-  });
-
-
+  // New images selected per-variant (files to replace that variant's images)
+  const [newVariantImages, setNewVariantImages] = useState({}); // { [variantIdx]: File[] }
+  // Track images to delete per variant
+  const [deleteVariantImages, setDeleteVariantImages] = useState({}); // { [variantIdx]: Set(url) }
 
   // Additional state variables
   const [successMessage, setSuccessMessage] = useState('');
-  const [isVariantVisible, setIsVariantVisible] = useState(false); // Controls visibility of variant form
-  const [variantCount, setVariantCount] = useState(0); // Tracks number of variants added
-
   const navigate = useNavigate();
+  const socketRef = useRef(null);
 
   // Fetch dropdown options on component mount
   useEffect(() => {
     fetchOptions();
+    
+    // Initialize Socket.IO connection
+    socketRef.current = io(`${import.meta.env.VITE_API_URI}`, {
+      transports: ['websocket', 'polling'],
+      auth: { token: localStorage.getItem('adminAccessToken') || '' },
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
   }, []);
 
   // Function to fetch dropdown options from the backend
   const fetchOptions = async () => {
     try {
-      const [categoriesRes, colorsRes, sizesRes, gendersRes, badgesRes,products] = await Promise.all([
+      const [categoriesRes, colorsRes, sizesRes, gendersRes, badgesRes, productRes, shippingRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_URI}/api/categories`),
         axios.get(`${import.meta.env.VITE_API_URI}/api/colors`),
         axios.get(`${import.meta.env.VITE_API_URI}/api/sizes`),
         axios.get(`${import.meta.env.VITE_API_URI}/api/genders`),
         axios.get(`${import.meta.env.VITE_API_URI}/api/badges`),
-        axios.get(`${import.meta.env.VITE_API_URI}/api/products/${id}`)
+        axios.get(`${import.meta.env.VITE_API_URI}/api/products/${id}`),
+        axios.get(`${import.meta.env.VITE_API_URI}/api/shipping`),
       ]);
 
       setCategories(categoriesRes.data);
@@ -74,22 +75,49 @@ const ProductEdit = () => {
       setSizes(sizesRes.data);
       setGenders(gendersRes.data);
       setBadges(badgesRes.data);
-      setProduct(products.data);
-      setVariant(products.data.variants)
+      setShippingTypes(shippingRes.data || []);
 
-      console.log(products.data.variants)
+      // Normalize product for editing
+      const prod = productRes.data;
+      const normalizedVariants = (prod.variants || []).map(v => ({
+        selectedColor: v.colorName || '',
+        selectedColorHex: v.hexCode || '',
+        sizes: Array.isArray(v.sizes) ? v.sizes : [],
+        prices: Array.isArray(v.prices) ? v.prices : [],
+        discountPrices: Array.isArray(v.discountPrices) ? v.discountPrices : [],
+        badgeNames: Array.isArray(v.badgeNames) ? v.badgeNames : [],
+        badgeColors: Array.isArray(v.badgeColors) ? v.badgeColors : [],
+        stock: v.stock || '',
+        stockBySize: Array.isArray(v.stockBySize) ? v.stockBySize : [],
+        description: v.description || '',
+        images: Array.isArray(v.images) ? v.images : [], // urls
+        shippingIds: Array.isArray(v.shippingOptions) ? v.shippingOptions.map(o => o._id || o.shippingId).filter(Boolean) : [],
+        specifications: Array.isArray(v.specifications) ? v.specifications : [],
+      }));
+
+      setProduct({
+        name: prod.name || '',
+        categories: Array.isArray(prod.categories) ? prod.categories : [],
+        mainPrice: prod.mainPrice || '',
+        discountPrice: prod.discountPrice || '',
+        mainBadgeName: prod.mainBadgeName || '',
+        mainBadgeColor: prod.mainBadgeColor || '',
+        gender: prod.gender || '',
+        variants: normalizedVariants,
+        mainImage: prod.mainImage || null,
+      });
+      setDeleteVariantImages({});
+      setNewVariantImages({});
     } catch (error) {
       console.error('Error fetching options:', error);
     }
   };
-
 
   // Handle changes in the main product form inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     if (name === 'mainBadgeName') {
-      // When mainBadgeName changes, also set mainBadgeColor based on selected badge
       const selectedBadge = badges.find(badge => badge.name === value);
       const mainBadgeColor = selectedBadge ? selectedBadge.color : '';
       setProduct(prevProduct => ({
@@ -98,119 +126,115 @@ const ProductEdit = () => {
         mainBadgeColor: mainBadgeColor,
       }));
     } else if (name === 'categories') {
-      // Handle multiple category selection
       setProduct(prevProduct => ({
         ...prevProduct,
         categories: Array.from(e.target.selectedOptions, (option) => option.value),
       }));
     } else {
-      // Handle other input changes
       setProduct(prevProduct => ({ ...prevProduct, [name]: value }));
     }
   };
 
-  // Handle changes in the variant form inputs
-  const handleVariantChange = (e) => {
-    const { name, value } = e.target;
-    
-    if (name === 'selectedColor') {
-      // When selectedColor changes, also set selectedColorHex based on selected color
-      const selectedColorObj = colors.find(color => color.name === value);
-      const selectedColorHex = selectedColorObj ? selectedColorObj.hexCode : '';
-      setVariant(prevVariant => ({
-        ...prevVariant,
-        selectedColor: value,
-        selectedColorHex: selectedColorHex,
-      }));
-    } else if (name === 'badgeNames') {
-      // When badgeNames change, also set badgeColors based on selected badges
-      const selectedBadgeNames = Array.from(e.target.selectedOptions, option => option.value);
-      const selectedBadgeColors = selectedBadgeNames.map(name => {
-        const badge = badges.find(b => b.name === name);
-        return badge ? badge.color : '';
-      });
-      setVariant(prevVariant => ({
-        ...prevVariant,
-        badgeNames: selectedBadgeNames,
-        badgeColors: selectedBadgeColors,
-      }));
-    } else {
-      // Handle other variant input changes
-      setVariant(prevVariant => ({ ...prevVariant, [name]: value }));
-    }
-  };
-  // Handle image uploads for variants
-  const handleVariantImageChange = (e) => {
-    setVariant((prevVariant) => ({ ...prevVariant, images: Array.from(e.target.files) }));
-  };
-
-  // Add a new size-price-discountPrice row in the variant form
-  const addSizePrice = () => {
-    setVariant((prevVariant) => ({
-      ...prevVariant,
-      sizes: [...prevVariant.sizes, ''],
-      prices: [...prevVariant.prices, ''],
-      discountPrices: [...prevVariant.discountPrices, ''],
-    }));
-  };
-
-  // Handle changes in sizes, prices, and discountPrices arrays
-  const handleSizePriceChange = (index, value, type) => {
-    setVariant((prevVariant) => {
-      const updatedArray = [...prevVariant[type]];
-      updatedArray[index] = value;
-      return { ...prevVariant, [type]: updatedArray };
+  // Per-variant handlers
+  const updateVariantField = (idx, patch) => {
+    setProduct(prev => {
+      const variants = [...prev.variants];
+      variants[idx] = { ...variants[idx], ...patch };
+      return { ...prev, variants };
     });
   };
 
-  // Function to add a variant to the product
-  const addVariant = () => {
-    if (variant.selectedColor && variant.sizes.length > 0 && variant.stock) {
-      if (variantCount >= 4) {
-        alert('You can only add up to 4 variants.');
-        return;
-      }
+  const handleVariantSizePriceChange = (vIdx, index, value, type) => {
+    setProduct(prev => {
+      const variants = [...prev.variants];
+      const arr = [...variants[vIdx][type]];
+      arr[index] = value;
+      variants[vIdx] = { ...variants[vIdx], [type]: arr };
+      return { ...prev, variants };
+    });
+  };
 
-      setProduct((prevProduct) => ({
-        ...prevProduct,
-        variants: [...prevProduct.variants, { ...variant }],
-      }));
+  const addVariantSizeRow = (vIdx) => {
+    setProduct(prev => {
+      const variants = [...prev.variants];
+      variants[vIdx] = {
+        ...variants[vIdx],
+        sizes: [...variants[vIdx].sizes, ''],
+        prices: [...variants[vIdx].prices, ''],
+        discountPrices: [...variants[vIdx].discountPrices, ''],
+      };
+      return { ...prev, variants };
+    });
+  };
 
-      setVariantCount((prevCount) => prevCount + 1);
+  const removeVariantSizeRow = (vIdx, index) => {
+    setProduct(prev => {
+      const variants = [...prev.variants];
+      const sizesArr = [...variants[vIdx].sizes];
+      const pricesArr = [...variants[vIdx].prices];
+      const discArr = [...variants[vIdx].discountPrices];
+      sizesArr.splice(index, 1);
+      pricesArr.splice(index, 1);
+      discArr.splice(index, 1);
+      variants[vIdx] = { ...variants[vIdx], sizes: sizesArr, prices: pricesArr, discountPrices: discArr };
+      return { ...prev, variants };
+    });
+  };
 
-      // Reset variant state
-      setVariant({
-        selectedColor: '',
-        selectedColorHex: '',
-        sizes: [],
-        prices: [],
-        discountPrices: [],
-        deliveryTimes: '',
-        badgeNames: [],
-        badgeColors: [],
-        stock: '',
-        description: '',
-        images: [],
-      });
+  // Specification handling functions
+  const addVariantSpecification = (vIdx) => {
+    setProduct(prev => {
+      const variants = [...prev.variants];
+      variants[vIdx] = {
+        ...variants[vIdx],
+        specifications: [...(variants[vIdx].specifications || []), { name: '', value: '', unit: '' }],
+      };
+      return { ...prev, variants };
+    });
+  };
 
-      // Hide the variant section after adding
-      setIsVariantVisible(false);
-    } else {
-      alert('Please fill in all required fields for the variant.');
-    }
+  const removeVariantSpecification = (vIdx, index) => {
+    setProduct(prev => {
+      const variants = [...prev.variants];
+      const specsArr = [...(variants[vIdx].specifications || [])];
+      specsArr.splice(index, 1);
+      variants[vIdx] = { ...variants[vIdx], specifications: specsArr };
+      return { ...prev, variants };
+    });
+  };
+
+  const handleVariantSpecificationChange = (vIdx, index, field, value) => {
+    setProduct(prev => {
+      const variants = [...prev.variants];
+      const specsArr = [...(variants[vIdx].specifications || [])];
+      specsArr[index] = { ...specsArr[index], [field]: value };
+      variants[vIdx] = { ...variants[vIdx], specifications: specsArr };
+      return { ...prev, variants };
+    });
+  };
+
+  const handleSelectVariantImages = (vIdx, files) => {
+    setNewVariantImages(prev => ({
+      ...prev,
+      [vIdx]: [ ...(prev[vIdx] || []), ...Array.from(files) ]
+    }));
+  };
+
+  const toggleDeleteVariantImage = (vIdx, url) => {
+    setDeleteVariantImages(prev => {
+      const setForIdx = new Set(prev[vIdx] || []);
+      if (setForIdx.has(url)) setForIdx.delete(url); else setForIdx.add(url);
+      return { ...prev, [vIdx]: Array.from(setForIdx) };
+    });
+  };
+
+  const clearVariantImagesSelection = (vIdx) => {
+    setNewVariantImages(prev => ({ ...prev, [vIdx]: [] }));
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validate that all variants have images
-    for (let i = 0; i < product.variants.length; i++) {
-      if (product.variants[i].images.length === 0) {
-        alert(`Please upload images for variant ${i + 1}.`);
-        return;
-      }
-    }
 
     const formData = new FormData();
     formData.append('name', product.name);
@@ -220,30 +244,45 @@ const ProductEdit = () => {
     formData.append('mainBadgeName', product.mainBadgeName);
     formData.append('mainBadgeColor', product.mainBadgeColor);
     formData.append('gender', product.gender);
-    formData.append('mainImage', product.mainImage);
 
-    // Append variants as JSON string excluding images
+    if (product.mainImage && typeof product.mainImage !== 'string') {
+      formData.append('mainImage', product.mainImage);
+    }
 
-    
-    const variantsWithoutImages = product.variants.map((variant) => ({
-      colorName: variant.selectedColor,
-      hexCode: variant.selectedColorHex,
-      sizes: variant.sizes,
-      prices: variant.prices,
-      discountPrices: variant.discountPrices,
-      deliveryTimes: variant.deliveryTimes,
-      badgeNames: variant.badgeNames,
-      badgeColors: variant.badgeColors,
-      stock: variant.stock,
-      description: variant.description,
+    // Build variants payload (no images, includes shippingIds)
+    const variantsWithoutImages = product.variants.map((v) => ({
+      colorName: v.selectedColor,
+      hexCode: v.selectedColorHex,
+      sizes: v.sizes,
+      prices: v.prices,
+      discountPrices: v.discountPrices,
+      badgeNames: v.badgeNames,
+      badgeColors: v.badgeColors,
+      stock: v.stock,
+      stockBySize: v.stockBySize,
+      description: v.description,
+      shippingIds: Array.isArray(v.shippingIds) ? v.shippingIds : (v.shippingId ? [v.shippingId] : []),
+      specifications: Array.isArray(v.specifications) ? v.specifications : [],
     }));
     formData.append('variants', JSON.stringify(variantsWithoutImages));
 
-    // Append images with field names 'images-0' to 'images-3'
-    product.variants.forEach((variant, index) => {
-      variant.images.forEach((image) => {
-        formData.append(`images-${index}`, image);
-      });
+    // Append only the variants whose images are being replaced and deletions
+    Object.keys(newVariantImages).forEach((key) => {
+      const vIdx = Number(key);
+      const files = newVariantImages[vIdx];
+      if (Array.isArray(files) && files.length > 0) {
+        files.forEach((file) => {
+          formData.append(`images-${vIdx}`, file);
+        });
+      }
+    });
+
+    Object.keys(deleteVariantImages).forEach((key) => {
+      const vIdx = Number(key);
+      const toDelete = deleteVariantImages[vIdx];
+      if (Array.isArray(toDelete) && toDelete.length > 0) {
+        formData.append(`deleteImages-${vIdx}`, JSON.stringify(toDelete));
+      }
     });
 
     try {
@@ -252,39 +291,24 @@ const ProductEdit = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Product created:', response.data);
-      setSuccessMessage('Product created successfully!');
+      setSuccessMessage('Product updated successfully!');
       
-      // Reset the form after successful submission
-      setProduct({
-        name: '',
-        categories: [],
-        mainPrice: '',
-        discountPrice: '',
-        mainBadgeName: '',
-        mainBadgeColor: '',
-        gender: '',
-        variants: [],
-        mainImage: null,
-      });
-      setVariant({
-        selectedColor: '',
-        selectedColorHex: '',
-        sizes: [],
-        prices: [],
-        discountPrices: [],
-        deliveryTimes: '',
-        badgeNames: [],
-        badgeColors: [],
-        stock: '',
-        description: '',
-        images: [],
-      });
-      setVariantCount(0);
-      setIsVariantVisible(false); // Ensure variant form is hidden
+      // Emit socket event for product update
+      if (socketRef.current) {
+        socketRef.current.emit('productUpdated', {
+          productId: id,
+          updateType: 'product_updated',
+          timestamp: new Date()
+        });
+      }
+      
+      // Refresh product
+      fetchOptions();
+      setNewVariantImages({});
+      setDeleteVariantImages({});
     } catch (error) {
-      console.error('Error creating product:', error);
-      alert('Failed to create product. Please try again.');
+      console.error('Error updating product:', error);
+      alert('Failed to update product. Please try again.');
     }
   };
 
@@ -383,206 +407,275 @@ const ProductEdit = () => {
             name="mainImage"
             onChange={(e) => setProduct({ ...product, mainImage: e.target.files[0] })}
             className="px-4 py-3 border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
           />
         </div>
 
         {/* Variant Information */}
         <div>
           <h2 className="text-2xl font-semibold mb-4 text-gray-800">Variant Information</h2>
-          {isVariantVisible && (
-            <>
-              {/* Variant Color and Stock */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                <select
-                  name="selectedColor"
-                  value={variant.Color}
-                  onChange={handleVariantChange}
-                  className="border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="" disabled>
-                    Select Color
-                  </option>
-                  {colors.map((color) => (
-                    <option key={color._id} value={color.name}>
-                      {color.name} ({color.hexCode})
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  name="stock"
-                  placeholder="Stock Quantity"
-                  value={variant.stock}
-                  onChange={handleVariantChange}
-                  className="px-4 py-3 border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
 
-              {/* Variant Description and Images */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <textarea
-                  name="description"
-                  placeholder="Variant Description"
-                  value={variant.description}
-                  onChange={handleVariantChange}
-                  className="px-4 py-3 border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows="3"
-                  required
-                />
-                <input
-                  type="file"
-                  name="images"
-                  onChange={handleVariantImageChange}
-                  className="px-4 py-3 border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  multiple
-                  required
-                />
-              </div>
-
-              {/* Sizes and Prices */}
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2 text-gray-800">Sizes and Prices</h3>
-                {variant.sizes.map((size, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
-                    <select
-                      value={size}
-                      onChange={(e) => handleSizePriceChange(index, e.target.value, 'sizes')}
-                      className="border border-gray-300 bg-white rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="" disabled>
-                        Select Size
-                      </option>
-                      {sizes.map((sizeOption) => (
-                        <option key={sizeOption._id} value={sizeOption.name}>
-                          {sizeOption.name}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      placeholder="Price"
-                      value={variant.prices[index]}
-                      onChange={(e) => handleSizePriceChange(index, e.target.value, 'prices')}
-                      className="px-4 py-3 border border-gray-300 bg-white rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                    <input
-                      type="number"
-                      placeholder="Discount Price"
-                      value={variant.discountPrices[index]}
-                      onChange={(e) => handleSizePriceChange(index, e.target.value, 'discountPrices')}
-                      className="px-4 py-3 border border-gray-300 bg-white rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addSizePrice}
-                  className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                >
-                  <FaPlus className="mr-2" /> Add Size & Price
-                </button>
-              </div>
-
-              {/* Badge Names and Colors */}
-              <select
-                name="badgeNames"
-                value={variant.badgeNames}
-                onChange={handleVariantChange}
-                className="border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                multiple
-              >
-                <option value="" disabled>
-                  Select Variant Badges
-                </option>
-                {badges.map((badge) => (
-                  <option key={badge._id} value={badge.name}>
-                    {badge.name} ({badge.color})
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
-
-          {/* Add/Cancel Variant Button */}
-          <div className="mb-4">
-            
-            {isVariantVisible && variantCount < 5 && (
-              <button
-                type="button"
-                onClick={addVariant}
-                className="flex items-center bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition mt-2"
-              >
-                <FaPlus className="mr-2" /> Save Variant
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Display Added Variants */}
-        <div className="overflow-x-auto">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Product Variants</h2>
-          <table className="min-w-full bg-white border">
-            <thead>
-              <tr>
-                <th className="py-2 px-4 border-b text-gray-600">Color</th>
-                <th className="py-2 px-4 border-b text-gray-600">Sizes</th>
-                <th className="py-2 px-4 border-b text-gray-600">Stock</th>
-                <th className="py-2 px-4 border-b text-gray-600">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {product.variants.length === 0 ? (
+          {/* Display Added Variants with inline editors */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border">
+              <thead>
                 <tr>
-                  <td colSpan="4" className="text-center py-4">
-                    No variants added.
-                  </td>
+                  <th className="py-2 px-4 border-b text-gray-600">Color</th>
+                  <th className="py-2 px-4 border-b text-gray-600">Sizes & Prices</th>
+                  <th className="py-2 px-4 border-b text-gray-600">Specifications</th>
+                  <th className="py-2 px-4 border-b text-gray-600">Shipping</th>
+                  <th className="py-2 px-4 border-b text-gray-600">Existing Images</th>
+                  <th className="py-2 px-4 border-b text-gray-600">Add/Replace Images</th>
                 </tr>
-              ) : (
-                product.variants.map((v, index) => (
-                  <tr key={index} className="text-center">
-                    <td className="py-2 px-4 border-b flex items-center justify-center">
-                      {/* Display color swatch */}
-                      <span
-                        className="w-4 h-4 rounded-full mr-2"
-                        style={{ backgroundColor: v.hexCode }}
-                      ></span>
-                      {v.colorName} ({v.hexCode})
-                    </td>
-                    <td className="py-2 px-4 border-b">{v.sizes.join(', ')}</td>
-                    <td className="py-2 px-4 border-b">{v.stock}</td>
-                    <td className="py-2 px-4 border-b flex justify-center space-x-2">
-                    <button
-              type="button"
-              onClick={() => setIsVariantVisible(!isVariantVisible)} // Toggle variant form visibility
-              className={`flex items-center px-4 py-2 rounded transition ${
-                isVariantVisible ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-              } text-white`}
-              disabled={ !isVariantVisible} // Disable if max variants reached
-            >
-              Edit
-            </button>
-                      <button
-                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
-                        onClick={() => {
-                          const updatedVariants = product.variants.filter((_, i) => i !== index);
-                          setProduct({ ...product, variants: updatedVariants });
-                          setVariantCount((prevCount) => prevCount - 1);
-                          axios.delete(`/products/varients/${v._id}`)
-                        }}
-                      >
-                        Delete
-                      </button>
+              </thead>
+              <tbody>
+                {product.variants.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-4">
+                      No variants found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  product.variants.map((v, vIdx) => (
+                    <tr key={vIdx} className="align-top">
+                      <td className="py-2 px-4 border-b">
+                        <div>
+                          <select
+                            value={v.selectedColor}
+                            onChange={(e)=>updateVariantField(vIdx, { selectedColor: e.target.value, selectedColorHex: (colors.find(c=>c.name===e.target.value)?.hexCode)||'' })}
+                            className="border border-gray-300 bg-white rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">Select Color</option>
+                            {colors.map(c=> (
+                              <option key={c._id} value={c.name}>{c.name} ({c.hexCode})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="mt-2">
+                          <textarea
+                            value={v.description}
+                            onChange={(e)=>updateVariantField(vIdx, { description: e.target.value })}
+                            placeholder="Description"
+                            className="w-full border rounded px-2 py-1 bg-white"
+                            rows={2}
+                          />
+                        </div>
+                        <div className="mt-2 text-sm">Stock:
+                          <input type="number" value={v.stock} onChange={(e)=>updateVariantField(vIdx, { stock: e.target.value })} className="ml-2 border rounded px-2 py-1 w-24 bg-white" />
+                        </div>
+                        <div className="mt-2 text-sm">Stock by Size:
+                          {v.sizes.map((size, sizeIdx) => (
+                            <div key={sizeIdx} className="flex items-center mt-1">
+                              <span className="text-xs text-gray-600 w-12">{size}:</span>
+                              <input 
+                                type="number" 
+                                value={v.stockBySize[sizeIdx] || 0} 
+                                onChange={(e) => {
+                                  const newStockBySize = [...(v.stockBySize || [])];
+                                  newStockBySize[sizeIdx] = parseInt(e.target.value) || 0;
+                                  updateVariantField(vIdx, { stockBySize: newStockBySize });
+                                }} 
+                                className="ml-1 border rounded px-2 py-1 w-16 bg-white text-xs" 
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        {(v.sizes || []).map((size, i) => (
+                          <div key={i} className="flex gap-2 mb-2">
+                            <select
+                              value={size}
+                              onChange={(e)=>handleVariantSizePriceChange(vIdx, i, e.target.value, 'sizes')}
+                              className="border border-gray-300 bg-white rounded px-2 py-1"
+                            >
+                              <option value="">Select Size</option>
+                              {sizes.map(s => (
+                                <option key={s._id} value={s.name}>{s.name}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="number"
+                              placeholder="Price"
+                              value={v.prices[i]}
+                              onChange={(e)=>handleVariantSizePriceChange(vIdx, i, e.target.value, 'prices')}
+                              className="border rounded px-2 py-1 w-28 bg-white"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Discount"
+                              value={v.discountPrices[i]}
+                              onChange={(e)=>handleVariantSizePriceChange(vIdx, i, e.target.value, 'discountPrices')}
+                              className="border rounded px-2 py-1 w-28 bg-white"
+                            />
+                            <button type="button" className="text-red-600" onClick={()=>removeVariantSizeRow(vIdx, i)}>×</button>
+                          </div>
+                        ))}
+                        <button type="button" className="flex items-center bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition" onClick={()=>addVariantSizeRow(vIdx)}>
+                          <FaPlus className="mr-1" /> Add Size
+                        </button>
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        {(v.specifications || []).map((spec, i) => (
+                          <div key={i} className="flex gap-2 mb-2">
+                            <input
+                              type="text"
+                              placeholder="Name"
+                              value={spec.name}
+                              onChange={(e)=>handleVariantSpecificationChange(vIdx, i, 'name', e.target.value)}
+                              className="border border-gray-300 bg-white rounded px-2 py-1 text-xs"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Value"
+                              value={spec.value}
+                              onChange={(e)=>handleVariantSpecificationChange(vIdx, i, 'value', e.target.value)}
+                              className="border border-gray-300 bg-white rounded px-2 py-1 text-xs"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Unit"
+                              value={spec.unit}
+                              onChange={(e)=>handleVariantSpecificationChange(vIdx, i, 'unit', e.target.value)}
+                              className="border border-gray-300 bg-white rounded px-2 py-1 text-xs w-16"
+                            />
+                            <button type="button" className="text-red-600" onClick={()=>removeVariantSpecification(vIdx, i)}>×</button>
+                          </div>
+                        ))}
+                        <button type="button" className="flex items-center bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition" onClick={()=>addVariantSpecification(vIdx)}>
+                          <FaPlus className="mr-1" /> Add Spec
+                        </button>
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        <div>
+                          <select
+                            value={v.selectedColor}
+                            onChange={(e)=>updateVariantField(vIdx, { selectedColor: e.target.value, selectedColorHex: (colors.find(c=>c.name===e.target.value)?.hexCode)||'' })}
+                            className="border border-gray-300 bg-white rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">Select Color</option>
+                            {colors.map(c=> (
+                              <option key={c._id} value={c.name}>{c.name} ({c.hexCode})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="mt-2">
+                          <textarea
+                            value={v.description}
+                            onChange={(e)=>updateVariantField(vIdx, { description: e.target.value })}
+                            placeholder="Description"
+                            className="w-full border rounded px-2 py-1 bg-white"
+                            rows={2}
+                          />
+                        </div>
+                        <div className="mt-2 text-sm">Stock:
+                          <input type="number" value={v.stock} onChange={(e)=>updateVariantField(vIdx, { stock: e.target.value })} className="ml-2 border rounded px-2 py-1 w-24 bg-white" />
+                        </div>
+                        <div className="mt-2 text-sm">Stock by Size:
+                          {v.sizes.map((size, sizeIdx) => (
+                            <div key={sizeIdx} className="flex items-center mt-1">
+                              <span className="text-xs text-gray-600 w-12">{size}:</span>
+                              <input 
+                                type="number" 
+                                value={v.stockBySize[sizeIdx] || 0} 
+                                onChange={(e) => {
+                                  const newStockBySize = [...(v.stockBySize || [])];
+                                  newStockBySize[sizeIdx] = parseInt(e.target.value) || 0;
+                                  updateVariantField(vIdx, { stockBySize: newStockBySize });
+                                }} 
+                                className="ml-1 border rounded px-2 py-1 w-16 bg-white text-xs" 
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        {(v.sizes || []).map((size, i) => (
+                          <div key={i} className="flex gap-2 mb-2">
+                            <select
+                              value={size}
+                              onChange={(e)=>handleVariantSizePriceChange(vIdx, i, e.target.value, 'sizes')}
+                              className="border border-gray-300 bg-white rounded px-2 py-1"
+                            >
+                              <option value="">Select Size</option>
+                              {sizes.map(s => (
+                                <option key={s._id} value={s.name}>{s.name}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="number"
+                              placeholder="Price"
+                              value={v.prices[i]}
+                              onChange={(e)=>handleVariantSizePriceChange(vIdx, i, e.target.value, 'prices')}
+                              className="border rounded px-2 py-1 w-28 bg-white"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Discount"
+                              value={v.discountPrices[i]}
+                              onChange={(e)=>handleVariantSizePriceChange(vIdx, i, e.target.value, 'discountPrices')}
+                              className="border rounded px-2 py-1 w-28 bg-white"
+                            />
+                            <button type="button" className="text-red-600" onClick={()=>removeVariantSizeRow(vIdx, i)}>×</button>
+                          </div>
+                        ))}
+                        <button type="button" className="flex items-center bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition" onClick={()=>addVariantSizeRow(vIdx)}>
+                          <FaPlus className="mr-1" /> Add Size
+                        </button>
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        <div className="flex flex-col gap-2">
+                          <select
+                            multiple
+                            value={Array.isArray(v.shippingIds) ? v.shippingIds : []}
+                            onChange={(e)=>{
+                              const values = Array.from(e.target.selectedOptions).map(o=>o.value);
+                              updateVariantField(vIdx, { shippingIds: values });
+                            }}
+                            className="border border-gray-300 bg-white rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
+                          >
+                            {shippingTypes.map(s => (
+                              <option key={s._id} value={s._id}>{s.name} (${Number(s.charge).toFixed(2)}, {s.estimatedDays}d)</option>
+                            ))}
+                          </select>
+                          <button type="button" className="text-xs text-blue-600 underline self-start" onClick={()=>{
+                            // apply this variant's shippingIds to all variants
+                            setProduct(prev=>({
+                              ...prev,
+                              variants: prev.variants.map((vv, idx)=> idx===vIdx ? vv : { ...vv, shippingIds: Array.isArray(v.shippingIds)? [...v.shippingIds] : [] })
+                            }));
+                          }}>Apply to all variants</button>
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        <div className="flex flex-wrap gap-3">
+                          {(v.images || []).map(url => (
+                            <label key={url} className="relative inline-block">
+                              <img src={url} alt="variant" className="w-16 h-16 object-cover rounded border" />
+                              <input
+                                type="checkbox"
+                                onChange={()=>toggleDeleteVariantImage(vIdx, url)}
+                                className="absolute top-1 right-1 w-4 h-4"
+                                checked={(deleteVariantImages[vIdx]||[]).includes(url)}
+                              />
+                            </label>
+                          ))}
+                        </div>
+                        {(deleteVariantImages[vIdx]||[]).length > 0 && (
+                          <div className="text-xs text-red-600 mt-1">Will delete: {(deleteVariantImages[vIdx]||[]).length} image(s)</div>
+                        )}
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        <input type="file" multiple accept="image/*" onChange={(e)=>handleSelectVariantImages(vIdx, e.target.files)} className="mb-2" />
+                        {Array.isArray(newVariantImages[vIdx]) && newVariantImages[vIdx].length > 0 && (
+                          <div className="text-xs text-gray-700">Selected: {newVariantImages[vIdx].length} file(s) <button type="button" className="ml-2 text-red-600" onClick={()=>clearVariantImagesSelection(vIdx)}>Clear</button></div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Submit Button */}
@@ -591,7 +684,7 @@ const ProductEdit = () => {
             type="submit"
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition w-full"
           >
-            Edit Product
+            Save Changes
           </button>
         </div>
       </div>
