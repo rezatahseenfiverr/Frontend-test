@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { UserContext } from "./UserContext";
 import { io } from "socket.io-client";
 
@@ -13,7 +14,7 @@ export const useUserChat = () => {
 };
 
 export const UserChatProvider = ({ children }) => {
-  const { user, authRequest, isLoggedIn } = useContext(UserContext);
+  const { user, authRequest, isLoggedIn, getAuthHeader } = useContext(UserContext);
   const [isOpen, setIsOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -32,6 +33,13 @@ export const UserChatProvider = ({ children }) => {
   const [assignedAdmin, setAssignedAdmin] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
 
+  // AI mode states
+  const [chatMode, setChatMode] = useState("support");
+  const [aiMessages, setAiMessages] = useState([
+    { _id: "ai_welcome", senderType: "assistant", text: "Hi! I'm your AI shopping assistant. I can track orders, compare products, or recommend items for you. What do you need?", createdAt: new Date().toISOString() }
+  ]);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
 
   const API_URI = import.meta.env.VITE_API_URI ;
 
@@ -488,16 +496,90 @@ export const UserChatProvider = ({ children }) => {
   // --- Scroll to bottom ---
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, aiMessages]);
+
+  // --- Send AI message ---
+  const sendAIMessage = React.useCallback(async (textToSend) => {
+    if (!textToSend?.trim()) return;
+    const userMsg = { _id: `user_${Date.now()}`, senderType: "customer", text: textToSend, createdAt: new Date().toISOString() };
+    setAiMessages(prev => [...prev, userMsg]);
+    setAiError(null);
+    setIsAiLoading(true);
+    try {
+      const headers = await getAuthHeader();
+      const res = await axios.post(`${API_URI}/api/assistant/chat`, { message: textToSend }, { headers, timeout: 25000 });
+      const assistantText = res?.data?.reply || "I could not generate a response right now.";
+      setAiMessages(prev => [...prev, { _id: `ai_${Date.now()}`, senderType: "assistant", text: assistantText, createdAt: new Date().toISOString() }]);
+    } catch (err) {
+      const errMsg = err?.response?.data?.message || err?.message || "Failed to get AI response";
+      setAiError(errMsg);
+      setAiMessages(prev => [...prev, { _id: `ai_err_${Date.now()}`, senderType: "assistant", text: "Sorry, I encountered an error. Please try again or switch to Customer Care.", createdAt: new Date().toISOString() }]);
+    } finally {
+      setIsAiLoading(false);
+    }
+  }, [API_URI, getAuthHeader]);
+
+  // --- Load AI chat history from server ---
+  const fetchAIChat = React.useCallback(async () => {
+    try {
+      const headers = await getAuthHeader();
+      const res = await axios.get(`${API_URI}/api/assistant/history`, { headers, timeout: 10000 });
+      const serverMessages = res?.data?.messages || [];
+      if (serverMessages.length > 0) {
+        const mapped = serverMessages.map(m => ({
+          _id: m._id || `msg_${Date.now()}_${Math.random()}`,
+          senderType: m.role === "user" ? "customer" : "assistant",
+          text: m.content,
+          createdAt: m.createdAt || new Date().toISOString(),
+        }));
+        setAiMessages(mapped);
+      } else {
+        // Reset to default welcome if empty
+        setAiMessages([
+          { _id: "ai_welcome", senderType: "assistant", text: "Hi! I'm your AI shopping assistant. I can track orders, compare products, or recommend items for you. What do you need?", createdAt: new Date().toISOString() }
+        ]);
+      }
+    } catch {
+      // Keep existing messages on error
+    }
+  }, [API_URI, getAuthHeader]);
+
+  // --- Clear AI chat on server ---
+  const clearAIChat = React.useCallback(async () => {
+    try {
+      const headers = await getAuthHeader();
+      await axios.delete(`${API_URI}/api/assistant/clear`, { headers, timeout: 10000 });
+      setAiMessages([
+        { _id: "ai_welcome", senderType: "assistant", text: "Chat cleared! Ask me anything about your orders, products, or get recommendations.", createdAt: new Date().toISOString() }
+      ]);
+      setAiError(null);
+    } catch (err) {
+      setAiError(err?.response?.data?.message || "Failed to clear chat");
+    }
+  }, [API_URI, getAuthHeader]);
+
+  const clearAiError = React.useCallback(() => setAiError(null), []);
+
+  // --- Fetch AI chat history when switching to AI mode ---
+  useEffect(() => {
+    if (chatMode === "ai" && isOpen && user?._id) {
+      fetchAIChat();
+    }
+  }, [chatMode, isOpen, user?._id, fetchAIChat]);
 
   // --- Send message ---
   const handleSend = React.useCallback(async () => {
+    const trimmed = inputMessage.trim();
+    if (!trimmed) return;
+    // AI mode: bypass socket/room logic
+    if (chatMode === "ai") {
+      setInputMessage("");
+      await sendAIMessage(trimmed);
+      return;
+    }
     console.log("handleSend called with:", { inputMessage, activeRoom, socket });
-    if (!inputMessage.trim() || !activeRoom?._id) {
-      console.log("Validation failed:", { 
-        hasInput: !!inputMessage.trim(), 
-        hasRoom: !!activeRoom?._id 
-      });
+    if (!activeRoom?._id) {
+      console.log("Validation failed: no active room");
       return;
     }
     
@@ -533,7 +615,7 @@ export const UserChatProvider = ({ children }) => {
       console.error("Error sending message:", err);
       setError(err.response?.data?.message || "Failed to send message");
     }
-  }, [inputMessage, activeRoom?._id, socket, user?._id]);
+  }, [inputMessage, activeRoom?._id, socket, user?._id, chatMode, sendAIMessage]);
 
   // --- Mark messages as read (with debouncing) ---
   const markAsReadTimeoutRef = useRef(null);
@@ -722,6 +804,17 @@ export const UserChatProvider = ({ children }) => {
     markAsRead,
     retryLoadChat,
     sendTypingIndicator,
+    
+    // AI mode
+    chatMode,
+    setChatMode,
+    aiMessages,
+    isAiLoading,
+    aiError,
+    sendAIMessage,
+    clearAiError,
+    fetchAIChat,
+    clearAIChat,
     
     // Additional data for components
     socket,

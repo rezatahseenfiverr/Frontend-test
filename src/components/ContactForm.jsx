@@ -75,25 +75,25 @@ function ContactForm() {
 
   const contactInfo = [
     {
-      icon: <FaEnvelope className="text-2xl text-yellow-500" />,
+      icon: <FaEnvelope className="text-2xl text-blue-500" />,
       title: "Email Us",
       details: "support@example.com",
       description: "We'll respond within 24 hours"
     },
     {
-      icon: <FaPhone className="text-2xl text-yellow-500" />,
+      icon: <FaPhone className="text-2xl text-blue-500" />,
       title: "Call Us",
       details: "+880 1234-567890",
       description: "Mon-Fri from 8am to 6pm"
     },
     {
-      icon: <FaMapMarkerAlt className="text-2xl text-yellow-500" />,
+      icon: <FaMapMarkerAlt className="text-2xl text-blue-500" />,
       title: "Visit Us",
       details: "Dhaka, Bangladesh",
       description: "123 Commerce Street, Dhaka"
     },
     {
-      icon: <FaClock className="text-2xl text-yellow-500" />,
+      icon: <FaClock className="text-2xl text-blue-500" />,
       title: "Business Hours",
       details: "Monday - Friday",
       description: "8:00 AM - 6:00 PM (GMT+6)"
@@ -101,12 +101,12 @@ function ContactForm() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
               <FaComments className="text-white text-xl" />
             </div>
             Contact Us
@@ -121,7 +121,7 @@ function ContactForm() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sticky top-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <FaEnvelope className="text-yellow-500" />
+                <FaEnvelope className="text-blue-500" />
                 Get in Touch
               </h2>
               
@@ -144,15 +144,15 @@ function ContactForm() {
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Frequently Asked Questions</h3>
                 <div className="space-y-3">
-                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm font-medium text-gray-900">How long does shipping take?</p>
                     <p className="text-xs text-gray-600 mt-1">Typically 3-5 business days for domestic orders.</p>
                   </div>
-                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm font-medium text-gray-900">What's your return policy?</p>
                     <p className="text-xs text-gray-600 mt-1">30-day return policy for unused items in original packaging.</p>
                   </div>
-                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm font-medium text-gray-900">Do you ship internationally?</p>
                     <p className="text-xs text-gray-600 mt-1">Yes, we ship to most countries worldwide.</p>
                   </div>
@@ -165,7 +165,7 @@ function ContactForm() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <FaPaperPlane className="text-yellow-500" />
+                <FaPaperPlane className="text-blue-500" />
                 Send us a Message
               </h2>
 
@@ -198,7 +198,7 @@ function ContactForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      <FaUser className="text-yellow-500" />
+                      <FaUser className="text-blue-500" />
                       Full Name
                     </label>
                     <input
@@ -207,7 +207,7 @@ function ContactForm() {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       placeholder="Enter your full name"
                       required
                     />
@@ -215,7 +215,7 @@ function ContactForm() {
 
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                      <FaEnvelope className="text-yellow-500" />
+                      <FaEnvelope className="text-blue-500" />
                       Email Address
                     </label>
                     <input
@@ -224,7 +224,7 @@ function ContactForm() {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       placeholder="Enter your email address"
                       required
                     />
@@ -233,7 +233,7 @@ function ContactForm() {
 
                 <div>
                   <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                    <FaComments className="text-yellow-500" />
+                    <FaComments className="text-blue-500" />
                     Subject
                   </label>
                   <input
@@ -242,7 +242,7 @@ function ContactForm() {
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     placeholder="What's this about?"
                     required
                   />
@@ -250,7 +250,7 @@ function ContactForm() {
 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                    <FaComments className="text-yellow-500" />
+                    <FaComments className="text-blue-500" />
                     Message
                   </label>
                   <textarea
@@ -259,7 +259,7 @@ function ContactForm() {
                     value={formData.message}
                     onChange={handleChange}
                     rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
                     placeholder="Tell us more about your inquiry..."
                     required
                   />
@@ -268,7 +268,7 @@ function ContactForm() {
                 <div className="flex items-center justify-between pt-4">
                   <p className="text-sm text-gray-500">
                     By submitting this form, you agree to our{' '}
-                    <a href="#" className="text-yellow-600 hover:text-yellow-700 underline">Privacy Policy</a>
+                    <a href="#" className="text-blue-600 hover:text-blue-700 underline">Privacy Policy</a>
                   </p>
                   
                   <button
@@ -277,7 +277,7 @@ function ContactForm() {
                     className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
                       isSubmitting
                         ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                        : 'bg-yellow-500 text-white hover:bg-yellow-600 transform hover:scale-105'
+                        : 'bg-blue-500 text-white hover:bg-blue-600 transform hover:scale-105'
                     }`}
                   >
                     {isSubmitting ? (
@@ -302,7 +302,7 @@ function ContactForm() {
         <div className="mt-12">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <FaMapMarkerAlt className="text-yellow-500" />
+              <FaMapMarkerAlt className="text-blue-500" />
               Find Us
             </h2>
             <div className="bg-gray-200 rounded-xl h-64 flex items-center justify-center">

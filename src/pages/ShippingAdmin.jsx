@@ -206,7 +206,7 @@ const ShippingAdmin = () => {
                     <td className="py-3 px-4">
                       <div className="flex justify-center space-x-2">
                         <button 
-                          className="flex items-center bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition"
+                          className="flex items-center bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition"
                           onClick={() => edit(it)}
                         >
                           <FaEdit className="mr-1" /> Edit

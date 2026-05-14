@@ -134,10 +134,10 @@ const AdminPOS = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Cart Items</p>
-                <p className="text-2xl font-bold text-orange-600">{cart.length}</p>
+                <p className="text-2xl font-bold text-indigo-600">{cart.length}</p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <FaShoppingCart className="text-orange-600 text-xl" />
+              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                <FaShoppingCart className="text-indigo-600 text-xl" />
               </div>
             </div>
           </div>

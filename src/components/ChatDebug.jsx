@@ -21,7 +21,7 @@ const ChatDebug = () => {
   };
 
   return (
-    <div className="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-400">
+    <div className="p-4 bg-blue-100 rounded-lg border-2 border-blue-400">
       <h3 className="text-lg font-bold mb-2">Chat Debug Panel</h3>
       <div className="space-y-2 text-sm">
         <p>Chat Open: {isOpen ? "Yes" : "No"}</p>

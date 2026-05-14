@@ -590,7 +590,7 @@ const UserProfile = () => {
               name={field}
               value={value || ''}
               onChange={handleChange}
-              className={`flex-1 rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm transition-all duration-200 ${
+              className={`flex-1 rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 ${
                 errors[field] ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
               placeholder={field === 'phoneNumber' ? '01XXXXXXXXX or +8801XXXXXXXXX' : `Enter ${formatLabel(label).toLowerCase()}`}
@@ -625,7 +625,7 @@ const UserProfile = () => {
         <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-all duration-200">
           <span className="text-gray-800 truncate">{value || 'Not provided'}</span>
           <button
-            className="p-2 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 rounded-lg transition-all duration-200"
+            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
             onClick={() => toggleEditing(field)}
             title="Edit"
           >
@@ -772,7 +772,7 @@ const UserProfile = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
             <FaUser className="text-white text-xl" />
           </div>
           My Profile
@@ -791,9 +791,9 @@ const UserProfile = () => {
       <div className="space-y-8">
         {/* Personal Information */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 px-6 py-4 border-b border-gray-100">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-              <FaUser className="text-yellow-600" />
+              <FaUser className="text-blue-600" />
               Personal Information
             </h2>
             <p className="text-sm text-gray-600 mt-1">Update your personal details</p>
@@ -802,17 +802,17 @@ const UserProfile = () => {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { field: 'firstName', icon: <FaUser className="text-yellow-500" /> },
-                { field: 'lastName', icon: <FaUser className="text-yellow-500" /> },
-                { field: 'fullName', icon: <FaIdCard className="text-yellow-500" /> },
-                { field: 'phoneNumber', icon: <FaPhone className="text-yellow-500" /> },
-                { field: 'userName', icon: <FaUser className="text-yellow-500" /> },
+                { field: 'firstName', icon: <FaUser className="text-blue-500" /> },
+                { field: 'lastName', icon: <FaUser className="text-blue-500" /> },
+                { field: 'fullName', icon: <FaIdCard className="text-blue-500" /> },
+                { field: 'phoneNumber', icon: <FaPhone className="text-blue-500" /> },
+                { field: 'userName', icon: <FaUser className="text-blue-500" /> },
               ].map(({ field, icon }) => renderField(field, field, formData[field], icon))}
               
               {/* Email field without edit functionality */}
               <div className="w-full">
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                  <FaEnvelope className="text-yellow-500" />
+                  <FaEnvelope className="text-blue-500" />
                   Email
                 </label>
                 <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
@@ -825,13 +825,13 @@ const UserProfile = () => {
             {/* Security Actions */}
             <div className="mt-8 pt-6 border-t border-gray-200">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <FaLock className="text-yellow-600" />
+                <FaLock className="text-blue-600" />
                 Security Settings
               </h3>
               <div className="flex flex-wrap gap-4">
                 <button
                   onClick={() => setShowPasswordModal(true)}
-                  className="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all duration-200 flex items-center gap-2 font-medium"
+                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center gap-2 font-medium"
                 >
                   <FaKey />
                   Change Password
@@ -850,9 +850,9 @@ const UserProfile = () => {
 
         {/* Address */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 px-6 py-4 border-b border-gray-100">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-              <FaMapMarkerAlt className="text-yellow-600" />
+              <FaMapMarkerAlt className="text-blue-600" />
               Address Information
             </h2>
             <p className="text-sm text-gray-600 mt-1">Manage your shipping address</p>
@@ -865,7 +865,7 @@ const UserProfile = () => {
                   `address.${field}`,
                   field,
                   formData.address?.[field],
-                  <FaMapMarkerAlt className="text-yellow-500" />
+                  <FaMapMarkerAlt className="text-blue-500" />
                 )
               )}
             </div>
@@ -874,9 +874,9 @@ const UserProfile = () => {
 
         {/* Payment Methods */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 px-6 py-4 border-b border-gray-100">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-              <FaCreditCard className="text-yellow-600" />
+              <FaCreditCard className="text-blue-600" />
               Payment Methods
             </h2>
             <p className="text-sm text-gray-600 mt-1">Manage your payment options</p>
@@ -914,7 +914,7 @@ const UserProfile = () => {
                         {!isEditingPm ? (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center">
                                 <FaCreditCard className="text-white text-lg" />
                               </div>
                               <div>
@@ -922,8 +922,8 @@ const UserProfile = () => {
                                 <div className="text-sm text-gray-600 capitalize">Type: {pm.type}</div>
                                 {isDefault && (
                                   <div className="flex items-center gap-1 mt-1">
-                                    <FaStar className="text-yellow-500 text-xs" />
-                                    <span className="text-xs text-yellow-600 font-medium">Default</span>
+                                    <FaStar className="text-blue-500 text-xs" />
+                                    <span className="text-xs text-blue-600 font-medium">Default</span>
                                   </div>
                                 )}
                               </div>
@@ -932,7 +932,7 @@ const UserProfile = () => {
                             <div className="flex items-center gap-2">
                               {!isDefault && (
                                 <button
-                                  className="p-2 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all duration-200"
+                                  className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
                                   title="Make default"
                                   onClick={() => makeDefaultPaymentMethod(pm._id)}
                                 >
@@ -966,7 +966,7 @@ const UserProfile = () => {
                                   name="label"
                                   value={editFields.label || ''}
                                   onChange={handleEditFieldChange}
-                                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   placeholder="e.g., Personal bKash, Visa **** 4242"
                                 />
                               </div>
@@ -979,7 +979,7 @@ const UserProfile = () => {
                                       name="brand"
                                       value={editFields.brand || ''}
                                       onChange={handleEditFieldChange}
-                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                       placeholder="Visa, MasterCard"
                                     />
                                   </div>
@@ -990,7 +990,7 @@ const UserProfile = () => {
                                       value={editFields.last4 || ''}
                                       onChange={handleEditFieldChange}
                                       maxLength={4}
-                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                       placeholder="1234"
                                     />
                                   </div>
@@ -1003,7 +1003,7 @@ const UserProfile = () => {
                                       max={12}
                                       value={editFields.expMonth || ''}
                                       onChange={handleEditFieldChange}
-                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                       placeholder="MM"
                                     />
                                   </div>
@@ -1015,7 +1015,7 @@ const UserProfile = () => {
                                       min={new Date().getFullYear()}
                                       value={editFields.expYear || ''}
                                       onChange={handleEditFieldChange}
-                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                       placeholder="YYYY"
                                     />
                                   </div>
@@ -1028,7 +1028,7 @@ const UserProfile = () => {
                                       name="walletNumberMasked"
                                       value={editFields.walletNumberMasked || ''}
                                       onChange={handleEditFieldChange}
-                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                       placeholder="01*********89"
                                     />
                                   </div>
@@ -1038,7 +1038,7 @@ const UserProfile = () => {
                                       name="msisdn"
                                       value={editFields.msisdn || ''}
                                       onChange={handleEditFieldChange}
-                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                       placeholder="01XXXXXXXXX"
                                     />
                                   </div>
@@ -1073,7 +1073,7 @@ const UserProfile = () => {
             {/* Add new method */}
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <FaPlus className="text-yellow-600" />
+                <FaPlus className="text-blue-600" />
                 Add New Payment Method
               </h3>
 
@@ -1085,7 +1085,7 @@ const UserProfile = () => {
                       name="type"
                       value={newPm.type}
                       onChange={handleNewPmChange}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="bkash">bKash</option>
                       <option value="nagad">Nagad</option>
@@ -1100,7 +1100,7 @@ const UserProfile = () => {
                       value={newPm.label}
                       onChange={handleNewPmChange}
                       placeholder="e.g., Personal bKash, Visa **** 4242"
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
 
@@ -1111,7 +1111,7 @@ const UserProfile = () => {
                       name="isDefault"
                       checked={newPm.isDefault}
                       onChange={handleNewPmChange}
-                      className="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <label htmlFor="isDefault" className="text-sm text-gray-700">
                       Set as default
@@ -1127,7 +1127,7 @@ const UserProfile = () => {
                           value={newPm.brand}
                           onChange={handleNewPmChange}
                           placeholder="Visa, MasterCard"
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
@@ -1139,7 +1139,7 @@ const UserProfile = () => {
                           onChange={handleNewPmChange}
                           placeholder="1234"
                           maxLength={4}
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
@@ -1153,7 +1153,7 @@ const UserProfile = () => {
                           value={newPm.expMonth}
                           onChange={handleNewPmChange}
                           placeholder="MM"
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
@@ -1166,7 +1166,7 @@ const UserProfile = () => {
                           value={newPm.expYear}
                           onChange={handleNewPmChange}
                           placeholder="YYYY"
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                     </>
@@ -1179,7 +1179,7 @@ const UserProfile = () => {
                           value={newPm.walletNumberMasked}
                           onChange={handleNewPmChange}
                           placeholder="01*********89"
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
 
@@ -1190,7 +1190,7 @@ const UserProfile = () => {
                           value={newPm.msisdn}
                           onChange={handleNewPmChange}
                           placeholder="01XXXXXXXXX"
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                     </>
@@ -1200,7 +1200,7 @@ const UserProfile = () => {
                 <div className="flex gap-3">
                   <button
                     onClick={submitNewPaymentMethod}
-                    className="px-6 py-3 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-all duration-200 flex items-center gap-2 font-medium"
+                    className="px-6 py-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 flex items-center gap-2 font-medium"
                   >
                     <FaPlus />
                     Add Method
@@ -1235,7 +1235,7 @@ const UserProfile = () => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  <FaKey className="text-yellow-600" />
+                  <FaKey className="text-blue-600" />
                   Change Password
                 </h3>
                 <button
@@ -1251,8 +1251,8 @@ const UserProfile = () => {
               </div>
 
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FaKey className="text-yellow-600 text-2xl" />
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaKey className="text-blue-600 text-2xl" />
                 </div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">Update Your Password</h4>
                 <p className="text-gray-600 text-sm">Enter your current password and choose a new secure password</p>
@@ -1270,7 +1270,7 @@ const UserProfile = () => {
                       name="currentPassword"
                       value={passwordData.currentPassword}
                       onChange={handlePasswordChange}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter current password"
                     />
                     <button
@@ -1297,7 +1297,7 @@ const UserProfile = () => {
                       name="newPassword"
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter new password"
                     />
                     <button
@@ -1324,7 +1324,7 @@ const UserProfile = () => {
                       name="confirmPassword"
                       value={passwordData.confirmPassword}
                       onChange={handlePasswordChange}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Confirm new password"
                     />
                     <button
@@ -1373,7 +1373,7 @@ const UserProfile = () => {
                   <button
                     onClick={updatePassword}
                     disabled={loading}
-                    className="flex-1 px-4 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
                     {loading ? 'Updating...' : 'Update Password'}
                   </button>

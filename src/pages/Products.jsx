@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ProductCard from "../components/ProductCard";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { FaFilter, FaTimes, FaSearch, FaSort, FaTh, FaListUl, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 function Products() {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [genders, setGenders] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedGenders, setSelectedGenders] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [sortBy, setSortBy] = useState("name");
   const [viewMode, setViewMode] = useState("grid");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
@@ -22,16 +25,21 @@ function Products() {
     price: true,
     sort: true,
     category: true,
+    brand: true,
     gender: true
   });
 
-  // Fetch all products initially
-  const getProducts = async () => {
+  // Fetch products with optional search query
+  const getProducts = async (query) => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URI}/api/products`);
-      setProducts(data);
-      setFilteredProducts(data);
+      const url = query
+        ? `${import.meta.env.VITE_API_URI}/api/products?q=${encodeURIComponent(query)}`
+        : `${import.meta.env.VITE_API_URI}/api/products`;
+      const { data } = await axios.get(url);
+      const list = Array.isArray(data) ? data : (data.products || []);
+      setProducts(list);
+      setFilteredProducts(list);
     } catch (error) {
       console.error("Error fetching products", error);
     }
@@ -55,6 +63,16 @@ function Products() {
       setGenders(data);
     } catch (error) {
       console.error("Error fetching genders", error);
+    }
+  };
+
+  // Fetch brands
+  const getBrands = async () => {
+    try {
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URI}/api/brands`);
+      setBrands(data);
+    } catch (error) {
+      console.error("Error fetching brands", error);
     }
   };
 
@@ -127,6 +145,13 @@ function Products() {
       });
     }
 
+    // Filter by selected brands
+    if (selectedBrands.length > 0) {
+      filtered = filtered.filter((product) =>
+        selectedBrands.includes(product.brand)
+      );
+    }
+
     // Filter by selected genders
     if (selectedGenders.length > 0) {
       filtered = filtered.filter((product) =>
@@ -161,24 +186,34 @@ function Products() {
     });
 
     setFilteredProducts(filtered);
-  }, [selectedCategories, selectedGenders, products, searchQuery, sortBy, priceRange]);
+  }, [selectedCategories, selectedBrands, selectedGenders, products, searchQuery, sortBy, priceRange]);
 
-  // Fetch categories, genders, and products on component mount
+  // Fetch categories, genders, and products on mount (with optional search)
   useEffect(() => {
     getCategories();
+    getBrands();
     getGenders();
-    getProducts();
+    getProducts(searchParams.get('search'));
   }, []);
+
+  // Sync URL search param changes to state
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearchQuery(urlSearch);
+    getProducts(urlSearch);
+  }, [searchParams]);
 
   const clearAllFilters = () => {
     setSelectedCategories([]);
+    setSelectedBrands([]);
     setSelectedGenders([]);
     setSearchQuery("");
     setPriceRange({ min: "", max: "" });
     setSortBy("name");
+    getProducts();
   };
 
-  const activeFiltersCount = selectedCategories.length + selectedGenders.length + 
+  const activeFiltersCount = selectedCategories.length + selectedBrands.length + selectedGenders.length + 
     (priceRange.min !== "" ? 1 : 0) + (priceRange.max !== "" ? 1 : 0) + 
     (searchQuery.trim() !== "" ? 1 : 0);
 
@@ -208,9 +243,9 @@ function Products() {
   );
 
   return (
-    <div className="bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 py-8 sm:py-12">
+      <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 py-8 sm:py-12">
         <div className="max-w-7xl mx-auto container-padding-mobile">
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">
@@ -230,12 +265,12 @@ function Products() {
             {/* Mobile Filter Button */}
             <div className="lg:hidden flex items-center justify-between mb-4 sm:mb-6">
               <button
-                className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full shadow-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 touch-target text-sm sm:text-base"
+                className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full shadow-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 transform hover:scale-105 touch-target text-sm sm:text-base"
                 onClick={() => setShowFilters(true)}
               >
                 <FaFilter />
                 Filters {activeFiltersCount > 0 && (
-                  <span className="bg-white text-orange-500 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-bold">
+                  <span className="bg-white text-indigo-500 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-bold">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -245,7 +280,7 @@ function Products() {
                   onClick={() => setViewMode("grid")}
                   className={`p-2 sm:p-3 rounded-xl transition-all duration-300 transform hover:scale-105 touch-target ${
                     viewMode === "grid" 
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg" 
                       : "bg-white text-gray-600 hover:bg-gray-50 shadow-md"
                   }`}
                 >
@@ -255,7 +290,7 @@ function Products() {
                   onClick={() => setViewMode("list")}
                   className={`p-2 sm:p-3 rounded-xl transition-all duration-300 transform hover:scale-105 touch-target ${
                     viewMode === "list" 
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg" 
                       : "bg-white text-gray-600 hover:bg-gray-50 shadow-md"
                   }`}
                 >
@@ -285,7 +320,7 @@ function Products() {
                     {activeFiltersCount > 0 && (
                       <button
                         onClick={clearAllFilters}
-                        className="mt-4 w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-semibold transform hover:scale-105"
+                        className="mt-4 w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 font-semibold transform hover:scale-105"
                       >
                         Clear All Filters ({activeFiltersCount})
                       </button>
@@ -293,19 +328,6 @@ function Products() {
                   </div>
                   
                   <div className="p-4 sm:p-6">
-                    <FilterSection title="Search Products" section="search" icon={<FaSearch className="text-yellow-500" />}>
-                      <div className="relative">
-                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search products..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
-                        />
-                      </div>
-                    </FilterSection>
-
                     <FilterSection title="Price Range" section="price" icon={<span className="text-green-500">💰</span>}>
                       <div className="space-y-3">
                         <div className="space-y-2">
@@ -314,14 +336,14 @@ function Products() {
                             placeholder="Min Price"
                             value={priceRange.min}
                             onChange={(e) => handlePriceChange('min', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                           />
                           <input
                             type="text"
                             placeholder="Max Price"
                             value={priceRange.max}
                             onChange={(e) => handlePriceChange('max', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                           />
                         </div>
                         {(priceRange.min || priceRange.max) && (
@@ -336,7 +358,7 @@ function Products() {
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       >
                         <option value="name">Name A-Z</option>
                         <option value="price-low">Price: Low to High</option>
@@ -355,13 +377,40 @@ function Products() {
                                 value={category.name}
                                 checked={selectedCategories.includes(category.name)}
                                 onChange={() => handleCategoryChange(category.name)}
-                                className="mr-3 accent-yellow-500 transform scale-110"
+                                className="mr-3 accent-blue-500 transform scale-110"
                               />
                               <span className="text-gray-700 group-hover:text-gray-900 transition-colors duration-200">{category.name}</span>
                             </label>
                           ))
                         ) : (
                           <p className="text-sm text-gray-500">Loading categories...</p>
+                        )}
+                      </div>
+                    </FilterSection>
+
+                    <FilterSection title="Brand" section="brand" icon={<span className="text-blue-500">🏷️</span>}>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {brands.length > 0 ? (
+                          brands.map((brand) => (
+                            <label key={brand._id} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200 group">
+                              <input
+                                type="checkbox"
+                                value={brand.name}
+                                checked={selectedBrands.includes(brand.name)}
+                                onChange={() => {
+                                  setSelectedBrands(prev =>
+                                    prev.includes(brand.name)
+                                      ? prev.filter(b => b !== brand.name)
+                                      : [...prev, brand.name]
+                                  );
+                                }}
+                                className="mr-3 accent-blue-500 transform scale-110"
+                              />
+                              <span className="text-gray-700 group-hover:text-gray-900 transition-colors duration-200">{brand.name}</span>
+                            </label>
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-500">Loading brands...</p>
                         )}
                       </div>
                     </FilterSection>
@@ -376,7 +425,7 @@ function Products() {
                                 value={gender.type}
                                 checked={selectedGenders.includes(gender.type)}
                                 onChange={() => handleGenderChange(gender.type)}
-                                className="mr-3 accent-yellow-500 transform scale-110"
+                                className="mr-3 accent-blue-500 transform scale-110"
                               />
                               <span className="text-gray-700 group-hover:text-gray-900 transition-colors duration-200">{gender.type}</span>
                             </label>
@@ -399,14 +448,14 @@ function Products() {
                   {activeFiltersCount > 0 && (
                     <button
                       onClick={clearAllFilters}
-                      className="px-3 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full text-sm font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-105"
+                      className="px-3 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full text-sm font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105"
                     >
                       Clear ({activeFiltersCount})
                     </button>
                   )}
                 </div>
                 
-                <FilterSection title="Search Products" section="search" icon={<FaSearch className="text-yellow-500" />}>
+                <FilterSection title="Search Products" section="search" icon={<FaSearch className="text-blue-500" />}>
                   <div className="relative">
                     <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
@@ -414,7 +463,7 @@ function Products() {
                       placeholder="Search products..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     />
                   </div>
                 </FilterSection>
@@ -427,14 +476,14 @@ function Products() {
                         placeholder="Min Price"
                         value={priceRange.min}
                         onChange={(e) => handlePriceChange('min', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       />
                       <input
                         type="text"
                         placeholder="Max Price"
                         value={priceRange.max}
                         onChange={(e) => handlePriceChange('max', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       />
                     </div>
                     {(priceRange.min || priceRange.max) && (
@@ -449,7 +498,7 @@ function Products() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   >
                     <option value="name">Name A-Z</option>
                     <option value="price-low">Price: Low to High</option>
@@ -468,13 +517,40 @@ function Products() {
                             value={category.name}
                             checked={selectedCategories.includes(category.name)}
                             onChange={() => handleCategoryChange(category.name)}
-                            className="mr-3 accent-yellow-500 transform scale-110"
+                            className="mr-3 accent-blue-500 transform scale-110"
                           />
                           <span className="text-gray-700 group-hover:text-gray-900 transition-colors duration-200">{category.name}</span>
                         </label>
                       ))
                     ) : (
                       <p className="text-sm text-gray-500">Loading categories...</p>
+                    )}
+                  </div>
+                </FilterSection>
+
+                <FilterSection title="Brand" section="brand" icon={<span className="text-blue-500">🏷️</span>}>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {brands.length > 0 ? (
+                      brands.map((brand) => (
+                        <label key={brand._id} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200 group">
+                          <input
+                            type="checkbox"
+                            value={brand.name}
+                            checked={selectedBrands.includes(brand.name)}
+                            onChange={() => {
+                              setSelectedBrands(prev =>
+                                prev.includes(brand.name)
+                                  ? prev.filter(b => b !== brand.name)
+                                  : [...prev, brand.name]
+                              );
+                            }}
+                            className="mr-3 accent-blue-500 transform scale-110"
+                          />
+                          <span className="text-gray-700 group-hover:text-gray-900 transition-colors duration-200">{brand.name}</span>
+                        </label>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">Loading brands...</p>
                     )}
                   </div>
                 </FilterSection>
@@ -489,7 +565,7 @@ function Products() {
                             value={gender.type}
                             checked={selectedGenders.includes(gender.type)}
                             onChange={() => handleGenderChange(gender.type)}
-                            className="mr-3 accent-yellow-500 transform scale-110"
+                            className="mr-3 accent-blue-500 transform scale-110"
                           />
                           <span className="text-gray-700 group-hover:text-gray-900 transition-colors duration-200">{gender.type}</span>
                         </label>
@@ -505,6 +581,20 @@ function Products() {
 
           {/* Products List */}
           <main className="w-full lg:w-3/4">
+            {/* Mobile Search Bar */}
+            <div className="lg:hidden mb-4">
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                />
+              </div>
+            </div>
+
             {/* Desktop Header */}
             <div className="hidden lg:flex items-center justify-between mb-6 sm:mb-8">
               <div>
@@ -522,7 +612,7 @@ function Products() {
                   onClick={() => setViewMode("grid")}
                   className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-105 touch-target ${
                     viewMode === "grid" 
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg" 
                       : "bg-white text-gray-600 hover:bg-gray-50 shadow-md"
                   }`}
                 >
@@ -532,7 +622,7 @@ function Products() {
                   onClick={() => setViewMode("list")}
                   className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-105 touch-target ${
                     viewMode === "list" 
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg" 
                       : "bg-white text-gray-600 hover:bg-gray-50 shadow-md"
                   }`}
                 >
@@ -543,7 +633,7 @@ function Products() {
 
             {loading ? (
               <div className="flex items-center justify-center h-48 sm:h-64">
-                <div className="animate-spin rounded-full h-10 sm:h-12 w-10 sm:w-12 border-b-2 border-yellow-500"></div>
+                <div className="animate-spin rounded-full h-10 sm:h-12 w-10 sm:w-12 border-b-2 border-blue-500"></div>
               </div>
             ) : filteredProducts.length > 0 ? (
               <div className={`grid gap-4 sm:gap-6 ${
@@ -568,7 +658,7 @@ function Products() {
                 </p>
                 <button
                   onClick={clearAllFilters}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 transform hover:scale-105 shadow-lg touch-target text-sm sm:text-base"
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 transform hover:scale-105 shadow-lg touch-target text-sm sm:text-base"
                 >
                   Clear All Filters
                 </button>

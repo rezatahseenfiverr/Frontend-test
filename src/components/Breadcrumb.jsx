@@ -9,7 +9,7 @@ const Breadcrumb = () => {
   const generateBreadcrumbs = () => {
     const pathnames = location.pathname.split('/').filter(x => x);
     const breadcrumbs = [
-      { name: 'Home', path: '/', icon: <FaHome className="text-yellow-500" /> }
+      { name: 'Home', path: '/', icon: <FaHome className="text-blue-500" /> }
     ];
 
     let currentPath = '';
@@ -57,7 +57,7 @@ const Breadcrumb = () => {
   }
 
   return (
-    <nav className="bg-white border-b border-gray-200">
+    <nav className="bg-white/75 backdrop-blur-xl border-b border-blue-100/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center space-x-2 py-3">
           {breadcrumbs.map((breadcrumb, index) => (
@@ -67,10 +67,10 @@ const Breadcrumb = () => {
               )}
               <Link
                 to={breadcrumb.path}
-                className={`flex items-center space-x-1 text-sm font-medium transition-colors duration-200 hover:text-yellow-600 ${
+                className={`flex items-center space-x-1 text-sm font-medium transition-colors duration-200 hover:text-blue-600 ${
                   index === breadcrumbs.length - 1
                     ? 'text-gray-900 cursor-default'
-                    : 'text-gray-600 hover:text-yellow-600'
+                    : 'text-gray-600 hover:text-blue-600'
                 }`}
                 onClick={index === breadcrumbs.length - 1 ? (e) => e.preventDefault() : undefined}
               >

@@ -9,10 +9,10 @@ const MobileTabBar = () => {
   const { isLoggedIn } = useContext(UserContext);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-yellow-400 to-yellow-500 shadow-lg border-t border-yellow-300 md:hidden flex justify-around z-50 py-1">
+    <div className="fixed bottom-2 left-3 right-3 rounded-2xl bg-white/80 backdrop-blur-xl border border-blue-100/80 shadow-2xl md:hidden flex justify-around z-50 py-2 px-1">
       <NavLink
         to="/home"
-        className="flex flex-col items-center text-gray-900 hover:text-black px-2 py-1 transition"
+        className="flex flex-col items-center text-slate-700 hover:text-blue-600 px-2 py-1 transition"
         style={{ minWidth: 50 }}
       >
         <FaHome size={20} />
@@ -20,7 +20,7 @@ const MobileTabBar = () => {
       </NavLink>
       <NavLink
         to="/products"
-        className="flex flex-col items-center text-gray-900 hover:text-black px-2 py-1 transition"
+        className="flex flex-col items-center text-slate-700 hover:text-blue-600 px-2 py-1 transition"
         style={{ minWidth: 50 }}
       >
         <FaBoxOpen size={20} />
@@ -29,7 +29,7 @@ const MobileTabBar = () => {
       {isLoggedIn && (
         <NavLink
           to="/profile/orders"
-          className="flex flex-col items-center text-gray-900 hover:text-black px-2 py-1 transition"
+          className="flex flex-col items-center text-slate-700 hover:text-blue-600 px-2 py-1 transition"
           style={{ minWidth: 50 }}
         >
           <FaClipboardList size={20} />
@@ -38,7 +38,7 @@ const MobileTabBar = () => {
       )}
       <NavLink
         to="/contactus"
-        className="flex flex-col items-center text-gray-900 hover:text-black px-2 py-1 transition"
+        className="flex flex-col items-center text-slate-700 hover:text-blue-600 px-2 py-1 transition"
         style={{ minWidth: 50 }}
       >
         <FaPhone size={20} />
@@ -46,7 +46,7 @@ const MobileTabBar = () => {
       </NavLink>
       <NavLink
         to={isLoggedIn ? "/profile" : "/login"}
-        className="flex flex-col items-center text-gray-900 hover:text-black px-2 py-1 transition"
+        className="flex flex-col items-center text-slate-700 hover:text-blue-600 px-2 py-1 transition"
         style={{ minWidth: 50 }}
       >
         <FaUserAlt size={20} />
@@ -54,7 +54,7 @@ const MobileTabBar = () => {
       </NavLink>
       <NavLink
         to="/cart"
-        className="flex flex-col items-center text-gray-900 hover:text-black px-2 py-1 transition relative"
+        className="flex flex-col items-center text-slate-700 hover:text-blue-600 px-2 py-1 transition relative"
         style={{ minWidth: 50 }}
       >
         <div className="relative">

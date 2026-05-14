@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { useAdmin } from '../context/AdminContext';
 import QRScanner from '../components/QRScanner';
 import { QRCodeSVG } from 'qrcode.react';
+import QRCode from 'qrcode';
 import { toast } from 'react-toastify';
 import { 
   FaFilter, 
@@ -22,14 +23,14 @@ import {
 
 const statusColors = {
   orderStatus: {
-    pending: 'bg-yellow-100 text-yellow-800',
-    processing: 'bg-orange-100 text-orange-800',
+    pending: 'bg-blue-100 text-blue-800',
+    processing: 'bg-indigo-100 text-indigo-800',
     shipped: 'bg-blue-100 text-blue-800',
     delivered: 'bg-green-100 text-green-800',
     cancelled: 'bg-red-100 text-red-800',
   },
   paymentStatus: {
-    pending: 'bg-yellow-100 text-yellow-800',
+    pending: 'bg-blue-100 text-blue-800',
     completed: 'bg-green-100 text-green-800',
     failed: 'bg-red-100 text-red-800',
     refunded: 'bg-purple-100 text-purple-800',
@@ -417,143 +418,71 @@ useEffect(() => {
 
   // 🔹 Inventory Scanning Functions
   const handleScanInventory = async (scannedCode) => {
+    const orderId = scanningForOrder?._id;
+    const itemIdx = scanningForItem;
+
     try {
-      // First, get inventory details from the scanned code
       const inventoryResponse = await axios.get(
         `${API_BASE_URL}/api/inventory/scan`,
         {
           params: { code: scannedCode },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminAccessToken')}`
-          }
+          headers: { Authorization: `Bearer ${localStorage.getItem('adminAccessToken')}` }
         }
       );
-
-      if (!inventoryResponse.data.success) {
-        alert('Inventory item not found or invalid code');
-        return;
-      }
 
       const inventoryItem = inventoryResponse.data.inventory;
-      
-      // Check if inventory is available for assignment
+
       if (inventoryItem.status !== 'active' || inventoryItem.assignedQuantity > 0) {
-        alert(`Inventory item is not available for assignment. Status: ${inventoryItem.status}`);
+        toast.error(`Item not available (status: ${inventoryItem.status})`);
         return;
       }
 
-      // Get the order item to check stock availability
-      const orderItem = scanningForOrder.items[scanningForItem];
+      const orderItem = scanningForOrder?.items[scanningForItem];
       if (!orderItem) {
-        alert('Order item not found');
+        toast.error('Order item not found');
         return;
       }
 
-      // Check if the inventory item matches the order item's size
       if (inventoryItem.size !== orderItem.size) {
-        alert(`Inventory item size (${inventoryItem.size}) does not match order item size (${orderItem.size})`);
+        toast.error(`Size mismatch: scanned ${inventoryItem.size}, expected ${orderItem.size}`);
         return;
       }
 
-      // Check if there's enough stock for this size
-      const productResponse = await axios.get(
-        `${API_BASE_URL}/api/products/${orderItem.productId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminAccessToken')}`
-          }
-        }
-      );
-
-      if (!productResponse.data) {
-        alert('Product not found');
-        return;
-      }
-
-      const product = productResponse.data;
-      const variant = product.variants.find(v => v._id === orderItem.variantId);
-      if (!variant) {
-        alert('Product variant not found');
-        return;
-      }
-
-      const sizeIndex = variant.sizes.indexOf(orderItem.size);
-      if (sizeIndex === -1) {
-        alert('Size not found in variant');
-        return;
-      }
-
-      // Check stock using stockBySize array
-      const currentStock = variant.stockBySize && variant.stockBySize[sizeIndex] !== undefined 
-        ? variant.stockBySize[sizeIndex] 
-        : variant.stock || 0;
-        
-      if (currentStock <= 0) {
-        alert(`No stock available for size ${orderItem.size}`);
-        return;
-      }
-
-      // Assign inventory to the order item
       const assignResponse = await axios.post(
         `${API_BASE_URL}/api/orders/${scanningForOrder._id}/assign-inventory`,
-        {
-          orderItemIndex: scanningForItem,
-          inventoryId: inventoryItem._id,
-          scannedCode: scannedCode
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('adminAccessToken')}`
-          }
-        }
+        { orderItemIndex: scanningForItem, inventoryId: inventoryItem._id, scannedCode },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('adminAccessToken')}` } }
       );
 
       if (assignResponse.data.success) {
-        alert('Inventory item assigned successfully and stock decreased!');
-        
-        // Emit socket event for inventory assignment
+        toast.success(`Assigned ${inventoryItem.barcode} to order`);
+
         if (socketRef.current) {
-          const eventData = {
+          socketRef.current.emit('inventoryAssigned', {
             productId: orderItem.productId,
             variantId: orderItem.variantId,
             size: orderItem.size,
-            action: 'inventory_assigned',
             inventoryId: inventoryItem._id,
             orderId: scanningForOrder._id,
             timestamp: new Date()
-          };
-          console.log('📡 Emitting inventoryAssigned event:', eventData);
-          socketRef.current.emit('inventoryAssigned', eventData);
-        } else {
-          console.log('❌ socketRef.current is not available for inventory assignment');
+          });
         }
-        
-        // Refresh the order data
+
         await fetchOrders(currentPage);
-        
-        // Refresh stock data for this product
-        await fetchProductStock(orderItem.productId);
-        
         if (editingOrder?._id === scanningForOrder._id) {
-          // Update the editing order with new data
-          const updatedOrder = orders.find(o => o._id === scanningForOrder._id);
-          if (updatedOrder) {
-            setEditingOrder(updatedOrder);
-          }
+          const updated = orders.find(o => o._id === scanningForOrder._id);
+          if (updated) setEditingOrder(updated);
         }
       } else {
-        alert('Failed to assign inventory item: ' + assignResponse.data.message);
+        toast.error(assignResponse.data.message || 'Failed to assign inventory');
       }
-
     } catch (err) {
-      console.error('Error assigning inventory:', err);
       if (err.response?.status === 401) {
         logout();
       } else {
-        alert('Failed to assign inventory item: ' + (err.response?.data?.message || err.message));
+        toast.error(err.response?.data?.message || err.message || 'Scan failed');
       }
     } finally {
-      // Close scanner and reset states
       setIsScannerOpen(false);
       setScanningForOrder(null);
       setScanningForItem(null);
@@ -709,85 +638,74 @@ useEffect(() => {
 
      const generateSVGBarcode = (text) => {
      if (!text || text.trim() === '') {
-       return `<svg width="100%" height="40" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
-         <rect width="200" height="40" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="2"/>
-         <text x="100" y="20" text-anchor="middle" font-family="Arial" font-size="8" fill="#6c757d">No Barcode</text>
+       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30" width="100%" height="100%">
+         <rect width="100" height="30" fill="#fff"/>
+         <text x="50" y="18" text-anchor="middle" font-family="monospace" font-size="8" fill="#999">No Barcode</text>
        </svg>`;
      }
 
-     const barCount = Math.min(text.length * 4, 32);
-     const baseBarWidth = 2;
-     const barHeight = 30;
-     const spacing = 1;
-     
-     let bars = [];
-     for (let i = 0; i < barCount; i++) {
-       const charIndex = i % text.length;
-       const charCode = text.charCodeAt(charIndex);
-       const barWidth = baseBarWidth + ((charCode % 4) * 0.5);
-       const isBlack = (charCode + i + Math.floor(i / 2)) % 2 === 0;
-       bars.push({ width: barWidth, isBlack });
-     }
-     
-     const totalWidth = bars.reduce((sum, bar) => sum + bar.width + spacing, 0);
-     const svgWidth = totalWidth + 20;
-     const svgHeight = barHeight + 10;
+     try {
+       const uid = `bc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+       const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+       svgEl.setAttribute('id', uid);
+       svgEl.style.position = 'absolute';
+       svgEl.style.left = '-9999px';
+       svgEl.style.top = '-9999px';
+       document.body.appendChild(svgEl);
 
-     let svg = `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
-     
-          svg += `<defs>
-        <linearGradient id="barcodeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-          <stop offset="50%" style="stop-color:#fefce8;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#fef3c7;stop-opacity:1" />
-        </linearGradient>
-        <filter id="barcodeShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-color="#f59e0b" flood-opacity="0.15"/>
-        </filter>
-      </defs>`;
-      
-      svg += `<rect x="2" y="2" width="${svgWidth - 4}" height="${svgHeight - 4}" fill="url(#barcodeGradient)" stroke="#fed7aa" stroke-width="1" rx="3"/>`;
-      
-      let x = 10;
-      bars.forEach((bar, index) => {
-        if (bar.isBlack) {
-          const barColor = index % 3 === 0 ? '#d97706' : '#f59e0b';
-          svg += `<rect x="${x + 0.3}" y="5.3" width="${bar.width}" height="${barHeight}" fill="#d97706" opacity="0.3" rx="0.5"/>`;
-          svg += `<rect x="${x}" y="5" width="${bar.width}" height="${barHeight}" fill="${barColor}" rx="0.8" filter="url(#barcodeShadow)"/>`;
-          svg += `<rect x="${x}" y="5" width="${bar.width}" height="3" fill="#ffffff" opacity="0.3" rx="0.8"/>`;
-        }
-        x += bar.width + spacing;
-      });
-     
-     svg += '</svg>';
-     return svg;
+       JsBarcode(svgEl, text, {
+         format: 'CODE128',
+         width: 1,
+         height: 30,
+         displayValue: false,
+         background: '#ffffff',
+         lineColor: '#000000',
+         margin: 3,
+       });
+
+       const serializer = new XMLSerializer();
+       let svgStr = serializer.serializeToString(svgEl);
+       document.body.removeChild(svgEl);
+
+       svgStr = svgStr.replace(/<svg([^>]+)>/, '<svg$1 width="100%" height="100%" preserveAspectRatio="xMidYMid meet">');
+       return svgStr;
+     } catch (e) {
+       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 25" width="100%" height="100%">
+         <rect width="80" height="25" fill="#fff"/>
+         <text x="40" y="15" text-anchor="middle" font-family="monospace" font-size="5" fill="#000">${text}</text>
+       </svg>`;
+     }
    };
 
-   // Generate QR Code SVG for print
-   const generateQRCodeSVG = (text, size = 32) => {
+   // Generate QR Code SVG synchronously using qrcode.create
+   const generateQRCodeSVG = (text, size = 36) => {
      if (!text || text.trim() === '') {
-       return `<text x="${size/2}" y="${size/2}" text-anchor="middle" dy=".3em" font-size="4" fill="#999">No QR</text>`;
+       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+         <rect width="${size}" height="${size}" fill="#fff"/>
+         <text x="${size/2}" y="${size/2}" text-anchor="middle" font-family="monospace" font-size="6" fill="#ccc">QR</text>
+       </svg>`;
      }
 
-     // Simple QR code pattern generation (for demonstration)
-     // In a real implementation, you'd use a proper QR code library
-     const cellSize = size / 8;
-     let svg = '';
-     
-     // Generate a pattern based on the text
-     for (let i = 0; i < 8; i++) {
-       for (let j = 0; j < 8; j++) {
-         const charIndex = (i * 8 + j) % text.length;
-         const charCode = text.charCodeAt(charIndex);
-         const isBlack = (charCode + i + j) % 2 === 0;
-         
-         if (isBlack) {
-           svg += `<rect x="${j * cellSize}" y="${i * cellSize}" width="${cellSize}" height="${cellSize}" fill="#000"/>`;
+     try {
+       const qr = QRCode.create(text, { errorCorrectionLevel: 'M' });
+       const n = qr.modules.size;
+       const cell = size / n;
+       let cells = '';
+       for (let r = 0; r < n; r++) {
+         for (let c = 0; c < n; c++) {
+           if (qr.modules.data[r * n + c]) {
+             cells += `<rect x="${c * cell}" y="${r * cell}" width="${cell}" height="${cell}" fill="#000"/>`;
+           }
          }
        }
+       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+         <rect width="${size}" height="${size}" fill="#fff"/>${cells}</svg>`;
+     } catch {
+       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+         <rect width="${size}" height="${size}" fill="#fff"/>
+         <text x="${size/2}" y="${size/2}" text-anchor="middle" font-family="monospace" font-size="5" fill="#000">${text}</text>
+       </svg>`;
      }
-     
-     return svg;
    };
 
   const printOrder = () => {
@@ -803,6 +721,10 @@ useEffect(() => {
           <title>Order #${order.orderId} - Barvella</title>
           <style>
             @media print {
+              * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
               @page {
                 size: A4;
                 margin: 1cm;
@@ -824,7 +746,7 @@ useEffect(() => {
                          .header {
                text-align: center;
                margin-bottom: 30px;
-               border-bottom: 3px solid #f59e0b;
+               border-bottom: 3px solid #6366f1;
                padding-bottom: 20px;
                background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
                border-radius: 12px;
@@ -844,7 +766,7 @@ useEffect(() => {
              .company-name {
                font-size: 28px;
                font-weight: bold;
-               color: #d97706;
+               color: #4f46e5;
                margin: 10px 0;
                text-transform: uppercase;
                letter-spacing: 2px;
@@ -856,7 +778,7 @@ useEffect(() => {
                color: #b45309;
                margin: 20px 0;
                text-align: center;
-               border: 2px solid #f59e0b;
+               border: 2px solid #6366f1;
                padding: 15px;
                border-radius: 12px;
                background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
@@ -872,12 +794,12 @@ useEffect(() => {
                background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
                padding: 20px;
                border-radius: 12px;
-               border-left: 4px solid #f59e0b;
+               border-left: 4px solid #6366f1;
                box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
              }
              .info-section h3 {
                margin: 0 0 15px 0;
-               color: #d97706;
+               color: #4f46e5;
                font-size: 18px;
                border-bottom: 2px solid #fed7aa;
                padding-bottom: 8px;
@@ -906,7 +828,7 @@ useEffect(() => {
               box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
                          .items-table th {
-               background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+               background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                color: white;
                padding: 15px;
                text-align: left;
@@ -973,7 +895,7 @@ useEffect(() => {
               border-radius: 4px;
             }
                          .total-section {
-               background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+               background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                color: white;
                padding: 20px;
                border-radius: 12px;
@@ -1024,11 +946,11 @@ useEffect(() => {
                background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
                padding: 20px;
                border-radius: 12px;
-               border-left: 4px solid #f59e0b;
+               border-left: 4px solid #6366f1;
                box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
              }
              .certification h4 {
-               color: #d97706;
+               color: #4f46e5;
                margin: 0 0 10px 0;
              }
             .certification p {
@@ -1040,7 +962,7 @@ useEffect(() => {
                position: fixed;
                top: 20px;
                right: 20px;
-               background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+               background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                color: white;
                border: none;
                padding: 12px 24px;
@@ -1052,7 +974,7 @@ useEffect(() => {
                transition: all 0.3s ease;
              }
              .print-button:hover {
-               background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+               background: linear-gradient(135deg, #4f46e5 0%, #b45309 100%);
                transform: translateY(-2px);
                box-shadow: 0 6px 16px rgba(245, 158, 11, 0.5);
              }
@@ -1217,13 +1139,7 @@ useEffect(() => {
                                <div class="barcode-item">
                                  <div class="barcode-label">QR Code</div>
                                  <div class="qr-code">
-                                   <svg width="40" height="40" viewBox="0 0 40 40">
-                                     <rect width="40" height="40" fill="white"/>
-                                     <rect x="2" y="2" width="36" height="36" fill="none" stroke="#333" stroke-width="1"/>
-                                     <g transform="translate(4, 4)">
-                                       ${generateQRCodeSVG(inventoryId, 32)}
-                                     </g>
-                                   </svg>
+                                   ${generateQRCodeSVG(inventoryId, 36)}
                                  </div>
                                </div>
                              ` : ''}
@@ -1281,7 +1197,7 @@ useEffect(() => {
                  <p>• Quality checked before dispatch</p>
                  <p>• 7-day return policy applies</p>
                  <p>• Customer satisfaction guaranteed</p>
-                            <p style="margin-top: 15px; font-weight: 600; color: #d97706;">
+                            <p style="margin-top: 15px; font-weight: 600; color: #4f46e5;">
                  Thank you for choosing Barvella!
                </p>
                </div>
@@ -2277,7 +2193,7 @@ useEffect(() => {
                               const stock = getItemStock(item);
                               if (stock === 'N/A') return 'text-gray-400';
                               if (stock <= 0) return 'text-red-500 font-semibold';
-                              if (stock < 5) return 'text-orange-500 font-semibold';
+                              if (stock < 5) return 'text-indigo-500 font-semibold';
                               return 'text-green-500';
                             })()}>
                               {getItemStock(item)}
@@ -2409,7 +2325,7 @@ useEffect(() => {
                             </div>
                           ) : (
                             <div className="flex flex-col items-center">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 ⚠ Not Assigned
                               </span>
                               <div className="mt-2 space-x-1">
@@ -2466,7 +2382,7 @@ useEffect(() => {
               <button
                 disabled={updatingOrderId === editingOrder._id}
                 onClick={() => handleCancelOrder(editingOrder._id)}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50"
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 Cancel Order
               </button>
@@ -2859,14 +2775,14 @@ useEffect(() => {
                                       : isOutOfStock
                                       ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                                       : isLowStock
-                                      ? 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
+                                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
                                       : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                                   }`}
                                 >
                                   <div className="font-medium">{size}</div>
                                   <div className={`text-xs ${
                                     isOutOfStock ? 'text-gray-400' :
-                                    isLowStock ? 'text-orange-600' : 'text-green-600'
+                                    isLowStock ? 'text-indigo-600' : 'text-green-600'
                                   }`}>
                                     {isOutOfStock ? 'Out of Stock' : `${stock} in stock`}
                                   </div>

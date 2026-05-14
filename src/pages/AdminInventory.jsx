@@ -43,6 +43,9 @@ const AdminInventory = () => {
   const [showModal, setShowModal] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showRestockModal, setShowRestockModal] = useState(false);
+  const [restockItem, setRestockItem] = useState(null);
+  const [restockQuantity, setRestockQuantity] = useState(1);
   const [scannedCode, setScannedCode] = useState('');
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [scanMode, setScanMode] = useState('qr'); // 'qr' or 'barcode'
@@ -291,8 +294,31 @@ const AdminInventory = () => {
      } catch (error) {
        toast.error('Failed to delete some inventory items');
        console.error('Error deleting inventory items:', error);
-     }
-   };
+    }
+  };
+
+  const handleRestock = async () => {
+    if (!restockItem || !restockQuantity || restockQuantity < 1) {
+      toast.error('Please enter a valid quantity');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URI}/api/inventory/restock`, {
+        items: [{ id: restockItem._id, quantity: restockQuantity }]
+      });
+
+      const updated = response.data.results?.[0];
+      toast.success(`Restocked! Now available: ${updated?.availableQuantity || restockQuantity}`);
+      setShowRestockModal(false);
+      setRestockItem(null);
+      setRestockQuantity(1);
+      fetchInventory();
+      fetchStats();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to restock inventory');
+    }
+  };
 
   const handleScanCode = async () => {
     try {
@@ -466,13 +492,8 @@ const AdminInventory = () => {
           itemsPerPage = 6; // 3x2 grid for thermal
       }
       
-      // Split into pages for thermal printing
       for (let i = 0; i < allCodes.length; i += itemsPerPage) {
-        const pageItems = allCodes.slice(i, i + itemsPerPage).map((code, pageIndex) => ({
-          ...code,
-          generatedCode: codes[i + pageIndex] || null
-        }));
-        content.push(pageItems);
+        content.push(allCodes.slice(i, i + itemsPerPage));
       }
     } else {
       // For normal printer, calculate items per page based on label size
@@ -534,7 +555,7 @@ const AdminInventory = () => {
         // Force QR code generation with multiple fallbacks
         try {
           console.log('Generating QR code SVG for:', qrTextFinal, 'with size:', qrSize);
-          const svgString = await QRCode.toString(qrTextFinal, {
+          let svgString = await QRCode.toString(qrTextFinal, {
             type: 'svg',
             width: qrSize,
             margin: 1,
@@ -579,7 +600,7 @@ const AdminInventory = () => {
 
         try {
           console.log('Generating QR code SVG for combined type:', qrTextFinal, 'size:', qrSize);
-          const qrSVG = await QRCode.toString(qrTextFinal, {
+          let qrSVG = await QRCode.toString(qrTextFinal, {
             type: 'svg',
             width: qrSize,
             margin: 1,
@@ -773,221 +794,93 @@ const AdminInventory = () => {
   // Generate QR code as SVG string (sync for preview)
   const generateSVGQRCodeSync = (text, size = 20) => {
     if (!text || text.trim() === '') {
-      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-        <rect width="${size}" height="${size}" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="2"/>
-        <text x="${size/2}" y="${size/2}" text-anchor="middle" dy=".3em" font-size="${size/4}" fill="#6c757d" font-weight="600">QR</text>
-        <text x="${size/2}" y="${size-2}" text-anchor="middle" font-size="${size/8}" fill="#adb5bd">No Data</text>
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="100%" preserveAspectRatio="xMidYMid meet">
+        <rect width="${size}" height="${size}" fill="#ffffff"/>
+        <text x="${size/2}" y="${size/2}" text-anchor="middle" dy=".3em" font-size="${size/4}" fill="#cccccc" font-family="monospace">QR</text>
       </svg>`;
     }
 
-    // For preview, use the simple QR code generator
-    return generateSimpleQRCode(text, size);
-  };
-
-  // Generate beautiful QR code SVG (fallback)
-  const generateSimpleQRCode = (text, size = 20) => {
-    if (!text || text.trim() === '') {
-      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-        <defs>
-          <linearGradient id="qrGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-          </linearGradient>
-        </defs>
-        <rect width="${size}" height="${size}" fill="url(#qrGradient)" stroke="#e9ecef" stroke-width="1" rx="4"/>
-        <text x="${size/2}" y="${size/2}" text-anchor="middle" dy=".3em" font-size="${size/4}" fill="#ffffff" font-weight="600">QR</text>
-        <text x="${size/2}" y="${size-2}" text-anchor="middle" font-size="${size/8}" fill="#ffffff" opacity="0.8">No Data</text>
-      </svg>`;
-    }
-
-    // Create a more sophisticated QR-like pattern with better visual appeal
-    const pattern = [];
-    const gridSize = 9; // Larger grid for better detail
-    for (let i = 0; i < gridSize; i++) {
-      pattern[i] = [];
-      for (let j = 0; j < gridSize; j++) {
-        const charIndex = (i * gridSize + j) % text.length;
-        const charCode = text.charCodeAt(charIndex);
-        pattern[i][j] = (charCode + i + j) % 2 === 0;
-      }
-    }
-
-    const margin = size * 0.1; // 10% margin
-    const patternSize = size - (2 * margin);
-    const cellSize = patternSize / gridSize;
-    
-    let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">`;
-    
-    // Add beautiful gradient background
-    svg += `<defs>
-      <linearGradient id="qrBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-        <stop offset="50%" style="stop-color:#f8f9fa;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
-      </linearGradient>
-      <linearGradient id="qrCellGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#2c3e50;stop-opacity:1" />
-        <stop offset="50%" style="stop-color:#34495e;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
-      </linearGradient>
-      <filter id="qrShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="1" stdDeviation="0.5" flood-color="#000000" flood-opacity="0.2"/>
-      </filter>
-    </defs>`;
-    
-    // Add beautiful background with rounded corners and shadow
-    svg += `<rect width="${size}" height="${size}" fill="url(#qrBgGradient)" stroke="#e9ecef" stroke-width="1" rx="4" filter="url(#qrShadow)"/>`;
-    
-    // Draw QR pattern with enhanced styling
-    for (let i = 0; i < gridSize; i++) {
-      for (let j = 0; j < gridSize; j++) {
-        if (pattern[i][j]) {
-          const x = margin + (j * cellSize);
-          const y = margin + (i * cellSize);
-          
-          // Create varying colors based on position
-          const colorVariations = ['#2c3e50', '#34495e', '#1a252f', '#2c3e50', '#34495e'];
-          const cellColor = colorVariations[(i + j) % colorVariations.length];
-          
-          // Add subtle shadow effect
-          svg += `<rect x="${x + 0.2}" y="${y + 0.2}" width="${cellSize - 0.4}" height="${cellSize - 0.4}" fill="#000000" opacity="0.3" rx="1"/>`;
-          
-          // Main cell with gradient
-          svg += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" fill="url(#qrCellGradient)" rx="1.5" filter="url(#qrShadow)"/>`;
-          
-          // Add highlight effect
-          svg += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize * 0.3}" fill="#ffffff" opacity="0.2" rx="1.5"/>`;
+    try {
+      const qr = QRCode.create(text, { errorCorrectionLevel: 'M' });
+      const n = qr.modules.size;
+      const cell = size / n;
+      const gap = Math.max(cell * 0.08, 0.3);
+      const dot = cell - gap;
+      let cells = '';
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          if (qr.modules.data[r * n + c]) {
+            cells += `<rect x="${c * cell + gap/2}" y="${r * cell + gap/2}" width="${dot}" height="${dot}" fill="#000"/>`;
+          }
         }
       }
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="100%" preserveAspectRatio="xMidYMid meet">
+        <rect width="${size}" height="${size}" fill="#fff"/>${cells}</svg>`;
+    } catch {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="100%" preserveAspectRatio="xMidYMid meet">
+        <rect width="${size}" height="${size}" fill="#fff"/>
+        <text x="${size/2}" y="${size/2}" text-anchor="middle" font-family="monospace" font-size="${Math.max(size/8, 6)}" fill="#000">${text}</text>
+      </svg>`;
     }
-    
-    // Add corner markers for better QR code recognition
-    const markerSize = cellSize * 2;
-    const markerPositions = [
-      [margin, margin],
-      [margin + patternSize - markerSize, margin],
-      [margin, margin + patternSize - markerSize]
-    ];
-    
-    markerPositions.forEach(([x, y]) => {
-      // Outer square
-      svg += `<rect x="${x}" y="${y}" width="${markerSize}" height="${markerSize}" fill="url(#qrCellGradient)" rx="2" filter="url(#qrShadow)"/>`;
-      // Inner square
-      svg += `<rect x="${x + markerSize * 0.25}" y="${y + markerSize * 0.25}" width="${markerSize * 0.5}" height="${markerSize * 0.5}" fill="#ffffff" rx="1"/>`;
-      // Center square
-      svg += `<rect x="${x + markerSize * 0.375}" y="${y + markerSize * 0.375}" width="${markerSize * 0.25}" height="${markerSize * 0.25}" fill="url(#qrCellGradient)" rx="0.5"/>`;
-    });
-    
-    // Add subtle inner border
-    svg += `<rect x="${margin}" y="${margin}" width="${patternSize}" height="${patternSize}" fill="none" stroke="#e9ecef" stroke-width="0.5" rx="2"/>`;
-    
-    svg += '</svg>';
-    return svg;
   };
 
-  // Generate beautiful SVG barcode for printing (without text)
+  const generateSimpleQRCode = (text, size = 20) => generateSVGQRCodeSync(text, size);
+
+  // Generate real barcode SVG using JsBarcode
   const generateSVGBarcode = (text, printerType = 'normal', labelSize = 'medium') => {
     if (!text || text.trim() === '') {
-      const width = printerType === 'thermal' ? 80 : 100;
-      const height = printerType === 'thermal' ? 20 : 25;
-      return `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-        <rect width="${width}" height="${height}" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="2"/>
-        <text x="${width/2}" y="${height/2}" text-anchor="middle" font-family="Arial" font-size="6" fill="#6c757d">No Barcode</text>
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30" width="100%" height="100%">
+        <rect width="100" height="30" fill="#fff"/>
+        <text x="50" y="18" text-anchor="middle" font-family="monospace" font-size="8" fill="#999">No Barcode</text>
       </svg>`;
     }
 
-    // Create a more realistic and beautiful barcode pattern that fills the container
-    const barCount = Math.min(text.length * 6, 48); // More bars to fill space
-    const baseBarWidth = printerType === 'thermal' ? 1.0 : 1.5;
-    const barHeight = printerType === 'thermal' ? 18 : 24;
-    const spacing = printerType === 'thermal' ? 0.2 : 0.6;
-    
-    let bars = [];
-    for (let i = 0; i < barCount; i++) {
-      const charIndex = i % text.length;
-      const charCode = text.charCodeAt(charIndex);
-      // Create varying bar widths to fill space better
-      const barWidth = baseBarWidth + ((charCode % 5) * 0.4) + (Math.sin(i * 0.3) * 0.3);
-      const isBlack = (charCode + i + Math.floor(i / 2)) % 2 === 0;
-      bars.push({ width: barWidth, isBlack });
-    }
-    
-    const totalWidth = bars.reduce((sum, bar) => sum + bar.width + spacing, 0);
-    const svgWidth = totalWidth + 16; // Reduced padding to fill more space
-    const svgHeight = barHeight + 6; // Reduced padding
+    try {
+      const uid = `bc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svgEl.setAttribute('id', uid);
+      svgEl.style.position = 'absolute';
+      svgEl.style.left = '-9999px';
+      svgEl.style.top = '-9999px';
+      document.body.appendChild(svgEl);
 
-    let svg = `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
-    
-    // Add enhanced background gradient
-    svg += `<defs>
-      <linearGradient id="barcodeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-        <stop offset="50%" style="stop-color:#fafbfc;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:1" />
-      </linearGradient>
-      <filter id="barcodeShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-color="#000000" flood-opacity="0.15"/>
-      </filter>
-      <linearGradient id="barGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" style="stop-color:#2c3e50;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#000000;stop-opacity:1" />
-      </linearGradient>
-    </defs>`;
-    
-    // Add background with rounded corners
-    svg += `<rect x="1" y="1" width="${svgWidth - 2}" height="${svgHeight - 2}" fill="url(#barcodeGradient)" stroke="#e9ecef" stroke-width="1" rx="4"/>`;
-    
-    // Draw beautiful barcode bars that fill the space
-    let x = 8;
-    bars.forEach((bar, index) => {
-      if (bar.isBlack) {
-        // Create gradient colors for bars
-        const barColors = ['#000000', '#1a1a1a', '#2c3e50', '#34495e', '#2c3e50', '#1a1a1a'];
-        const barColor = barColors[index % barColors.length];
-        
-        // Add enhanced shadow effect
-        svg += `<rect x="${x + 0.3}" y="3.3" width="${bar.width}" height="${barHeight}" fill="#000000" opacity="0.4" rx="0.5"/>`;
-        
-        // Main bar with gradient and enhanced styling
-        svg += `<rect x="${x}" y="3" width="${bar.width}" height="${barHeight}" fill="url(#barGradient)" rx="0.8" filter="url(#barcodeShadow)"/>`;
-        
-        // Add enhanced highlight
-        svg += `<rect x="${x}" y="3" width="${bar.width}" height="3" fill="#ffffff" opacity="0.3" rx="0.8"/>`;
-        
-        // Add subtle inner shadow
-        svg += `<rect x="${x + 0.5}" y="3.5" width="${bar.width - 1}" height="${barHeight - 1}" fill="none" stroke="#000000" stroke-width="0.5" opacity="0.2" rx="0.5"/>`;
-      }
-      x += bar.width + spacing;
-    });
-    
-    // Add enhanced start and stop patterns (guard bars)
-    const startX = 4;
-    const stopX = x - 2;
-    svg += `<rect x="${startX}" y="3" width="3" height="${barHeight}" fill="url(#barGradient)" rx="1" filter="url(#barcodeShadow)"/>`;
-    svg += `<rect x="${startX}" y="3" width="3" height="3" fill="#ffffff" opacity="0.4" rx="1"/>`;
-    svg += `<rect x="${stopX}" y="3" width="3" height="${barHeight}" fill="url(#barGradient)" rx="1" filter="url(#barcodeShadow)"/>`;
-    svg += `<rect x="${stopX}" y="3" width="3" height="3" fill="#ffffff" opacity="0.4" rx="1"/>`;
-    
-    // Add center pattern for better visual appeal
-    const centerX = svgWidth / 2 - 1;
-    svg += `<rect x="${centerX}" y="3" width="2" height="${barHeight}" fill="#000000" opacity="0.8" rx="0.5"/>`;
-    
-    svg += '</svg>';
-    return svg;
+      const height = printerType === 'thermal' ? 20 : 28;
+      JsBarcode(svgEl, text, {
+        format: 'CODE128',
+        width: printerType === 'thermal' ? 0.6 : 1,
+        height: height,
+        displayValue: false,
+        background: '#ffffff',
+        lineColor: '#000000',
+        margin: printerType === 'thermal' ? 2 : 3,
+      });
+
+      const serializer = new XMLSerializer();
+      let svgStr = serializer.serializeToString(svgEl);
+      document.body.removeChild(svgEl);
+
+      svgStr = svgStr.replace(/<svg([^>]+)>/, '<svg$1 width="100%" height="100%" preserveAspectRatio="xMidYMid meet">');
+      return svgStr;
+    } catch (e) {
+      const w = printerType === 'thermal' ? 60 : 80;
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} 25" width="100%" height="100%">
+        <rect width="${w}" height="25" fill="#fff"/>
+        <text x="${w/2}" y="15" text-anchor="middle" font-family="monospace" font-size="5" fill="#000">${text}</text>
+      </svg>`;
+    }
   };
 
-  const printCodes = async (printContent, codes = []) => {
-    const printWindow = window.open('', '_blank');
+  const printCodes = async (printContent, printWindow) => {
+    if (!printWindow) {
+      toast.error('Print window blocked. Please allow popups.');
+      return;
+    }
 
     console.log('PrintCodes: Starting print generation');
     console.log('PrintCodes: Print content pages:', printContent.length);
     console.log('PrintCodes: QR Code Type setting:', printSettings.qrCodeType);
-    
-    // Generate codes directly in the HTML template
-    let globalCodeIndex = 0;
 
     try {
-      let globalCodeIndex = 0;
 
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -996,6 +889,10 @@ const AdminInventory = () => {
             <title>Print Codes</title>
             <style>
               @media print {
+                * {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
                 @page {
                   margin: ${printSettings.printerType === 'thermal' ? '0.1in' : '0.3in'};
                   size: ${printSettings.printerType === 'thermal' ? '80mm 60mm landscape' : 'A4'};
@@ -1096,26 +993,25 @@ const AdminInventory = () => {
               }
 
               .qr-code {
-                width: ${printSettings.printerType === 'thermal' ? '25px' : '35px'};
-                height: ${printSettings.printerType === 'thermal' ? '25px' : '35px'};
-                margin: ${printSettings.printerType === 'thermal' ? '1px auto' : '3px auto'};
+                width: ${printSettings.printerType === 'thermal' ? '40px' : '35px'};
+                height: ${printSettings.printerType === 'thermal' ? '40px' : '35px'};
+                margin: ${printSettings.printerType === 'thermal' ? '2px auto' : '3px auto'};
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 background: white;
                 border: ${printSettings.printerType === 'thermal' ? 'none' : '1px solid #e0e0e0'};
                 border-radius: ${printSettings.printerType === 'thermal' ? '0' : '3px'};
-                padding: ${printSettings.printerType === 'thermal' ? '1px' : '2px'};
-                box-shadow: ${printSettings.printerType === 'thermal' ? 'none' : '0 1px 2px rgba(0,0,0,0.1)'};
+                padding: ${printSettings.printerType === 'thermal' ? '2px' : '2px'};
               }
-              .qr-code svg {
-                width: 100%;
-                height: 100%;
-                border-radius: 2px;
+              .qr-code svg,
+              .code-item svg {
+                width: 100% !important;
+                display: block;
               }
               .barcode-container {
                 width: 100%;
-                margin: ${printSettings.printerType === 'thermal' ? '1px auto' : '3px auto'};
+                margin: ${printSettings.printerType === 'thermal' ? '1px 0' : '3px auto'};
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -1123,19 +1019,11 @@ const AdminInventory = () => {
                 border: ${printSettings.printerType === 'thermal' ? 'none' : '1px solid #e0e0e0'};
                 border-radius: ${printSettings.printerType === 'thermal' ? '0' : '3px'};
                 padding: ${printSettings.printerType === 'thermal' ? '1px' : '4px'};
-                box-shadow: ${printSettings.printerType === 'thermal' ? 'none' : '0 1px 2px rgba(0,0,0,0.1)'};
-                min-height: ${printSettings.printerType === 'thermal' ? '25px' : '120px'};
+                min-height: ${printSettings.printerType === 'thermal' ? '30px' : '120px'};
               }
               .barcode-container svg {
                 width: 100%;
                 height: auto;
-                border-radius: 2px;
-                display: block;
-              }
-              .barcode-container div {
-                max-width: 100%;
-                height: auto;
-                border-radius: 2px;
                 display: block;
               }
               .quantity {
@@ -1217,9 +1105,9 @@ const AdminInventory = () => {
                     let qrSize;
                     if (printSettings.printerType === 'thermal') {
                       switch (printSettings.labelSize) {
-                        case 'small': qrSize = 20; break;
-                        case 'large': qrSize = 28; break;
-                        default: qrSize = 24; // medium
+                        case 'small': qrSize = 28; break;
+                        case 'large': qrSize = 38; break;
+                        default: qrSize = 34; // medium
                       }
                     } else {
                       switch (printSettings.labelSize) {
@@ -1291,15 +1179,15 @@ const AdminInventory = () => {
                     let qrSize;
                     if (printSettings.printerType === 'thermal') {
                       switch (printSettings.labelSize) {
-                        case 'small': qrSize = 20; break;
-                        case 'large': qrSize = 28; break;
-                        default: qrSize = 24; // medium
+                        case 'small': qrSize = 28; break;
+                        case 'large': qrSize = 38; break;
+                        default: qrSize = 34; // medium
                       }
                     } else {
                       switch (printSettings.labelSize) {
-                        case 'small': qrSize = 24; break;
-                        case 'large': qrSize = 32; break;
-                        default: qrSize = 28; // medium
+                        case 'small': qrSize = 36; break;
+                        case 'large': qrSize = 48; break;
+                        default: qrSize = 42; // medium
                       }
                     }
                     
@@ -1331,28 +1219,24 @@ const AdminInventory = () => {
                       ` : ''}
                       <div>
                         ${printSettings.qrCodeType === 'barcode' ? `
-                          <div style="margin: 5px 0;">
-                            <div style="height: 20px; background: white; border: 1px solid #d1d5db; border-radius: 2px; display: flex; align-items: center; justify-content: center;">
+                          <div style="margin: 4px 0; width: 100%;">
+                            <div style="height: 28px; background: white; border: 1px solid #d1d5db; border-radius: 2px; display: flex; align-items: center; width: 100%;">
                               ${generateSVGBarcode(code.barcode || 'NOBARCODE', printSettings.printerType, printSettings.labelSize)}
                             </div>
                           </div>
                         ` : printSettings.qrCodeType === 'qrCode' ? `
-                          <div style="margin: 5px 0;">
-                            <div style="display: flex; align-items: center; justify-content: center;">
-                              <div style="background: white; padding: 1px; border: 1px solid #d1d5db; border-radius: 2px;">
-                                ${generateSVGQRCodeSync(code.qrCode || 'NOQRCODE', qrSize)}
-                              </div>
+                          <div style="margin: 4px 0; width: 100%;">
+                            <div style="width: 100%; background: white; padding: 2px; border: 1px solid #d1d5db; border-radius: 2px;">
+                              ${generateSVGQRCodeSync(code.qrCode || 'NOQRCODE', qrSize)}
                             </div>
                           </div>
                         ` : printSettings.qrCodeType === 'combined' ? `
-                          <div style="margin: 5px 0;">
-                            <div style="height: 20px; background: white; border: 1px solid #d1d5db; border-radius: 2px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+                          <div style="margin: 4px 0; width: 100%;">
+                            <div style="height: 28px; background: white; border: 1px solid #d1d5db; border-radius: 2px; display: flex; align-items: center; width: 100%; margin-bottom: 3px;">
                               ${generateSVGBarcode(code.barcode || 'NOBARCODE', printSettings.printerType, printSettings.labelSize)}
                             </div>
-                            <div style="display: flex; align-items: center; justify-content: center;">
-                              <div style="background: white; padding: 1px; border: 1px solid #d1d5db; border-radius: 2px;">
-                                ${generateSVGQRCodeSync(code.qrCode || 'NOQRCODE', qrSize)}
-                              </div>
+                            <div style="width: 100%; background: white; padding: 2px; border: 1px solid #d1d5db; border-radius: 2px;">
+                              ${generateSVGQRCodeSync(code.qrCode || 'NOQRCODE', qrSize)}
                             </div>
                           </div>
                         ` : ''}
@@ -1706,43 +1590,28 @@ const AdminInventory = () => {
                            </div>
                          </div>
                        </td>
-                      <td className="py-3 px-4 text-gray-600">
-                        <div className="space-y-2">
-                          <div>
-                            {/* SVG Barcode */}
-                            <div className="mt-1">
-                              <div 
-                                className="h-10 bg-white border border-gray-300 rounded-lg flex items-center justify-center p-2 shadow-sm"
-                              >
-                                <div 
-                                  className="w-full h-full flex items-center justify-center"
-                                  dangerouslySetInnerHTML={{ 
-                                    __html: generateSVGBarcode(item.barcode || 'NOBARCODE', 'normal', 'medium') 
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            {/* QR Code */}
-                            <div className="flex items-center justify-center">
-                              <div className="bg-white p-2 border border-gray-300 rounded-lg shadow-sm">
-                                <div 
-                                  dangerouslySetInnerHTML={{ 
-                                    __html: generateSVGQRCodeSync(item.qrCode || 'NOQRCODE', 45) 
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-500 text-center space-y-1">
-                            <div className="bg-gray-50 px-2 py-1 rounded border border-gray-200 font-mono">
-                              {item.barcode}
-                            </div>
-                            <div className="bg-gray-50 px-2 py-1 rounded border border-gray-200 font-mono">
-                              {item.qrCode}
-                            </div>
-                          </div>
+                       <td className="py-3 px-4 text-gray-600">
+                         <div className="space-y-1.5">
+                           <div className="flex gap-2 items-start">
+                             <div className="flex-1 min-w-0">
+                               <div 
+                                 className="h-9 bg-white border border-gray-200 rounded"
+                                 dangerouslySetInnerHTML={{ 
+                                   __html: generateSVGBarcode(item.barcode || 'NOBARCODE', 'normal', 'medium') 
+                                 }}
+                               />
+                               <div className="text-[10px] text-gray-400 font-mono truncate mt-0.5">{item.barcode}</div>
+                             </div>
+                             <div className="flex-shrink-0">
+                               <div 
+                                 className="w-10 h-10 bg-white border border-gray-200 rounded"
+                                 dangerouslySetInnerHTML={{ 
+                                   __html: generateSVGQRCodeSync(item.qrCode || 'NOQRCODE', 40) 
+                                 }}
+                               />
+                               <div className="text-[10px] text-gray-400 font-mono truncate text-center mt-0.5">{item.qrCode}</div>
+                             </div>
+                           </div>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">
@@ -1795,6 +1664,19 @@ const AdminInventory = () => {
                           >
                             <FaTrash className="mr-1" /> Delete
                           </button>
+                          {item.status === 'out_of_stock' && (
+                            <button
+                              onClick={() => {
+                                setRestockItem(item);
+                                setRestockQuantity(1);
+                                setShowRestockModal(true);
+                              }}
+                              className="flex items-center bg-teal-500 text-white px-3 py-1 rounded text-sm hover:bg-teal-600 transition"
+                              title="Restock this out-of-stock item"
+                            >
+                              <FaPlus className="mr-1" /> Restock
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               // Simulate scanning this item's QR code
@@ -2459,7 +2341,7 @@ const AdminInventory = () => {
                         }
                       }
                     }}
-                    className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 transition"
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition"
                   >
                     Test Raw Data Conversion
                   </button>
@@ -2804,10 +2686,14 @@ const AdminInventory = () => {
                   Close
                 </button>
                                  <button
-                   onClick={async () => {
-                     // Generate print content based on settings
-                     const { content: printContent } = await generatePrintContent();
-                     await printCodes(printContent);
+                   onClick={() => {
+                     // Open print window SYNC before await (avoid popup blocker)
+                     const pw = window.open('', '_blank');
+                     if (!pw) { toast.error('Please allow popups for this site'); return; }
+                     (async () => {
+                       const { content: printContent } = await generatePrintContent();
+                       await printCodes(printContent, pw);
+                     })();
                    }}
                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
                  >
@@ -2822,14 +2708,70 @@ const AdminInventory = () => {
       {/* Scan Code Modal */}
       {showScanModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaCamera className="text-blue-600 text-sm" />
+                </div>
+                <h2 className="font-semibold text-gray-900">Enter Code</h2>
+              </div>
+              <button onClick={() => { setShowScanModal(false); setScannedCode(''); }} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition">
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {scannedCode && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                  <strong>Not found:</strong> {scannedCode}
+                  <p className="text-xs text-blue-600 mt-1">Modify the code below or try scanning a different code.</p>
+                </div>
+              )}
+              <div>
+                <input
+                  type="text"
+                  value={scannedCode}
+                  onChange={(e) => setScannedCode(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleScanCode()}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                  placeholder="Type barcode or QR code..."
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowScanModal(false); setScannedCode(''); }}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleScanCode}
+                  disabled={!scannedCode.trim()}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition text-sm"
+                >
+                  Find
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Restock Modal */}
+      {showRestockModal && restockItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Scan Barcode/QR Code</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Restock Inventory</h2>
                 <button
                   onClick={() => {
-                    setShowScanModal(false);
-                    setScannedCode('');
+                    setShowRestockModal(false);
+                    setRestockItem(null);
+                    setRestockQuantity(1);
                   }}
                   className="text-gray-400 hover:text-gray-600"
                 >
@@ -2839,77 +2781,64 @@ const AdminInventory = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              {scannedCode && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="text-sm text-blue-800">
-                    <strong>Scanned Code:</strong> {scannedCode}
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    This code was not found in the inventory. You can modify it or try a different code.
-                  </div>
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Enter Code</label>
-                                 <input
-                   type="text"
-                   value={scannedCode}
-                   onChange={(e) => setScannedCode(e.target.value)}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                   placeholder="Enter barcode or QR code..."
-                   autoFocus
-                 />
-              </div>
-               
-              <div className="text-center">
-                <div className="text-sm text-gray-600 mb-2">Or scan with your device camera</div>
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <div className="text-xs text-gray-500">
-                    📱 Use your phone's camera to scan QR codes<br/>
-                    📊 Use a barcode scanner for barcodes
-                  </div>
-                </div>
-                
-                {/* Show example QR code and barcode */}
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <div className="text-xs text-gray-600 mb-2">Example QR Code</div>
-                    <div className="bg-white p-2 rounded border">
-                      <div 
-                        dangerouslySetInnerHTML={{ 
-                          __html: generateSVGQRCodeSync('INV-EXAMPLE-123', 40) 
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-gray-600 mb-2">Example Barcode</div>
-                    <div className="bg-white p-2 rounded border">
-                      <div 
-                        dangerouslySetInnerHTML={{ 
-                          __html: generateSVGBarcode('INV-EXAMPLE-123', 'normal', 'small') 
-                        }}
-                      />
-                    </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  {restockItem.imageUri && (
+                    <img 
+                      src={restockItem.imageUri} 
+                      alt={restockItem.productId?.name}
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                  )}
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{restockItem.productId?.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      {restockItem.size} - {restockItem.color?.name || 'Default'}
+                    </p>
+                    <p className="text-xs text-gray-500 font-mono">{restockItem.barcode}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Restock Quantity
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={restockQuantity}
+                  onChange={(e) => setRestockQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                />
+              </div>
+
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                <p className="text-sm text-teal-800">
+                  <strong>Currently:</strong> Available {restockItem.availableQuantity} | Assigned {restockItem.assignedQuantity}
+                </p>
+                <p className="text-sm text-teal-800 font-semibold">
+                  <strong>After restock:</strong> Available {restockQuantity} | Assigned 0 — Active
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-2">
                 <button
                   onClick={() => {
-                    setShowScanModal(false);
-                    setScannedCode('');
+                    setShowRestockModal(false);
+                    setRestockItem(null);
+                    setRestockQuantity(1);
                   }}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleScanCode}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200"
+                  onClick={handleRestock}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors duration-200 flex items-center"
                 >
-                  Scan
+                  <FaPlus className="mr-2" /> Restock {restockQuantity} Unit{restockQuantity > 1 ? 's' : ''}
                 </button>
               </div>
             </div>

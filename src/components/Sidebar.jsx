@@ -288,6 +288,40 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               </NavLink>
             </li>
 
+            {/* AI & SEO */}
+            <li>
+              <NavLink
+                to="/admin/dashboard/seo-ai"
+                className={({ isActive }) => 
+                  `flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${
+                    isActive ? 'bg-indigo-100 dark:bg-gray-600' : ''
+                  }`
+                }
+              >
+                <svg className="flex-shrink-0 w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a6 6 0 00-6 6c0 1.887-.454 3.665-1.257 5.234a.75.75 0 00.515 1.076 32.91 32.91 0 003.256.508 3.5 3.5 0 006.972 0 32.903 32.903 0 003.256-.508.75.75 0 00.515-1.076A11.448 11.448 0 0116 8a6 6 0 00-6-6z" />
+                </svg>
+                <span className="flex-1 ms-3 whitespace-nowrap">AI & SEO</span>
+              </NavLink>
+            </li>
+
+            {/* Customer Wishlists */}
+            <li>
+              <NavLink
+                to="/admin/dashboard/wishlists"
+                className={({ isActive }) => 
+                  `flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${
+                    isActive ? 'bg-pink-100 dark:bg-gray-600' : ''
+                  }`
+                }
+              >
+                <svg className="flex-shrink-0 w-5 h-5 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-.36-.218 21.634 21.634 0 01-3.791-3.036c-1.758-1.682-3.478-3.853-3.478-6.372 0-2.368 1.57-4.276 3.862-4.276 1.472 0 2.746.676 3.622 1.737.876-1.06 2.15-1.737 3.622-1.737 2.291 0 3.862 1.908 3.862 4.276 0 2.519-1.72 4.69-3.478 6.372a21.634 21.634 0 01-3.791 3.036l-.019.01-.005.003a.75.75 0 01-.791 0z" />
+                </svg>
+                <span className="flex-1 ms-3 whitespace-nowrap">Wishlists</span>
+              </NavLink>
+            </li>
+
             {/* Sign Out */}
             <li>
               <button

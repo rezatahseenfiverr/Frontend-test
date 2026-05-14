@@ -86,7 +86,7 @@ function OrderDetails() {
   // Get status color
   const getStatusColor = (status) => {
     const colors = {
-      'pending': 'text-yellow-600 bg-yellow-50 border-yellow-200',
+      'pending': 'text-blue-600 bg-blue-50 border-blue-200',
       'processing': 'text-blue-600 bg-blue-50 border-blue-200',
       'shipped': 'text-indigo-600 bg-indigo-50 border-indigo-200',
       'delivered': 'text-green-600 bg-green-50 border-green-200',
@@ -100,7 +100,7 @@ function OrderDetails() {
   const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
       case 'pending':
-        return <FaClock className="text-yellow-600" />;
+        return <FaClock className="text-blue-600" />;
       case 'processing':
         return <FaBox className="text-blue-600" />;
       case 'shipped':
@@ -265,7 +265,7 @@ function OrderDetails() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-yellow-500 mx-auto mb-4" />
+          <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto mb-4" />
           <p className="text-lg text-gray-600">Loading order details...</p>
         </div>
       </div>
@@ -281,7 +281,7 @@ function OrderDetails() {
           <p className="text-gray-600 mb-4">{error}</p>
           <Link
             to="/profile/orders"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             <FaArrowLeft />
             Back to Orders
@@ -300,7 +300,7 @@ function OrderDetails() {
           <p className="text-gray-600 mb-4">The order you're looking for doesn't exist.</p>
           <Link
             to="/profile/orders"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             <FaArrowLeft />
             Back to Orders
@@ -373,12 +373,12 @@ function OrderDetails() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                          currentStep >= 1 ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-500'
+                          currentStep >= 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'
                         }`}>
                           {currentStep >= 1 ? <FaCheck /> : '1'}
                         </div>
                         <span className={`text-sm font-medium ${
-                          currentStep >= 1 ? 'text-yellow-600' : 'text-gray-500'
+                          currentStep >= 1 ? 'text-blue-600' : 'text-gray-500'
                         }`}>
                           Order Placed
                         </span>
@@ -427,7 +427,7 @@ function OrderDetails() {
                     {/* Progress Line */}
                     <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
-                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 transition-all duration-500"
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 transition-all duration-500"
                         style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                       />
                     </div>
@@ -439,19 +439,19 @@ function OrderDetails() {
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                            currentStep >= 1 ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-500'
+                            currentStep >= 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'
                           }`}>
                             {currentStep >= 1 ? <FaCheck /> : '1'}
                           </div>
                           {currentStep < 4 && (
                             <div className={`absolute top-10 left-1/2 transform -translate-x-1/2 w-0.5 h-8 ${
-                              currentStep >= 1 ? 'bg-yellow-500' : 'bg-gray-200'
+                              currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-200'
                             }`} />
                           )}
                         </div>
                         <div className="flex-1">
                           <span className={`text-sm font-medium ${
-                            currentStep >= 1 ? 'text-yellow-600' : 'text-gray-500'
+                            currentStep >= 1 ? 'text-blue-600' : 'text-gray-500'
                           }`}>
                             Order Placed
                           </span>
@@ -530,7 +530,7 @@ function OrderDetails() {
               {/* Status Timeline */}
               <div className="mt-6 space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full mt-2 flex-shrink-0" />
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                   <div>
                     <p className="font-medium text-gray-900">Order Placed</p>
                     <p className="text-sm text-gray-600">{formatDate(order.createdAt)}</p>
@@ -614,7 +614,7 @@ function OrderDetails() {
             {order.shipping && (
               <div className="bg-white rounded-xl shadow-sm border p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaTruck className="text-yellow-500" />
+                  <FaTruck className="text-blue-500" />
                   Shipping Information
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -667,7 +667,7 @@ function OrderDetails() {
             {/* Shipping Address */}
             <div className="bg-white rounded-xl shadow-sm border p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FaMapMarkerAlt className="text-yellow-500" />
+                <FaMapMarkerAlt className="text-blue-500" />
                 Shipping Address
               </h2>
               <div className="space-y-2">
@@ -687,7 +687,7 @@ function OrderDetails() {
             {/* Payment Information */}
             <div className="bg-white rounded-xl shadow-sm border p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FaCreditCard className="text-yellow-500" />
+                <FaCreditCard className="text-blue-500" />
                 Payment Information
               </h2>
               <div className="space-y-3">
@@ -699,7 +699,7 @@ function OrderDetails() {
                   <p className="text-sm font-medium text-gray-700">Payment Status</p>
                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                     order.paymentStatus === 'completed' ? 'text-green-600 bg-green-50 border-green-200' :
-                    order.paymentStatus === 'pending' ? 'text-yellow-600 bg-yellow-50 border-yellow-200' :
+                    order.paymentStatus === 'pending' ? 'text-blue-600 bg-blue-50 border-blue-200' :
                     'text-red-600 bg-red-50 border-red-200'
                   }`}>
                     {order.paymentStatus}

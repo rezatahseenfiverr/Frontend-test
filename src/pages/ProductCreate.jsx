@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const ProductCreate = () => {
   // Dropdown options state
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [genders, setGenders] = useState([]);
@@ -18,6 +19,7 @@ const ProductCreate = () => {
   const [product, setProduct] = useState({
     name: '',
     categories: [],
+    brand: '',
     mainPrice: '',
     discountPrice: '',
     mainBadgeName: '',
@@ -56,8 +58,9 @@ const ProductCreate = () => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [categoriesRes, colorsRes, sizesRes, gendersRes, badgesRes, unitsRes, shippingRes] = await Promise.all([
+        const [categoriesRes, brandsRes, colorsRes, sizesRes, gendersRes, badgesRes, unitsRes, shippingRes] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_URI}/api/categories`),
+          axios.get(`${import.meta.env.VITE_API_URI}/api/brands`),
           axios.get(`${import.meta.env.VITE_API_URI}/api/colors`),
           axios.get(`${import.meta.env.VITE_API_URI}/api/sizes`),
           axios.get(`${import.meta.env.VITE_API_URI}/api/genders`),
@@ -67,6 +70,7 @@ const ProductCreate = () => {
         ]);
 
         setCategories(categoriesRes.data);
+        setBrands(brandsRes.data);
         setColors(colorsRes.data);
         setSizes(sizesRes.data);
         setGenders(gendersRes.data);
@@ -83,6 +87,7 @@ const ProductCreate = () => {
 
   // Prepare options for react-select
   const categoryOptions = categories.map(c => ({ value: c.name, label: c.name }));
+  const brandOptions = brands.map(b => ({ value: b.name, label: b.name }));
   const colorOptions = colors.map(c => ({ value: c.name, label: `${c.name} (${c.hexCode})` }));
   const sizeOptions = sizes.map(s => ({ value: s.name, label: s.name }));
   const genderOptions = genders.map(g => ({ value: g.type, label: g.type }));
@@ -190,6 +195,13 @@ const ProductCreate = () => {
     setProduct((prev) => ({
       ...prev,
       gender: selectedOption ? selectedOption.value : '',
+    }));
+  };
+
+  const handleBrandChange = (selectedOption) => {
+    setProduct((prev) => ({
+      ...prev,
+      brand: selectedOption ? selectedOption.value : '',
     }));
   };
 
@@ -357,6 +369,8 @@ const ProductCreate = () => {
       const formData = new FormData();
       formData.append('name', product.name);
       formData.append('categories', JSON.stringify(product.categories));
+      formData.append('brand', product.brand);
+      formData.append('broadcast', product.broadcast ? 'true' : 'false');
       formData.append('mainPrice', product.mainPrice);
       formData.append('discountPrice', product.discountPrice);
       formData.append('mainBadgeName', product.mainBadgeName);
@@ -469,6 +483,27 @@ const ProductCreate = () => {
           onChange={handleCategoriesChange}
           placeholder="Select Categories"
         />
+
+        <Select
+          name="brand"
+          options={brandOptions}
+          className="mb-4"
+          classNamePrefix="select"
+          value={brandOptions.find((opt) => opt.value === product.brand) || null}
+          onChange={handleBrandChange}
+          placeholder="Select Brand"
+          isClearable
+        />
+
+        <label className="flex items-center gap-2 mb-4 text-sm text-gray-700 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={product.broadcast || false}
+            onChange={(e) => setProduct(prev => ({ ...prev, broadcast: e.target.checked }))}
+            className="rounded border-gray-300 accent-blue-500"
+          />
+          Broadcast this product (show in live feed)
+        </label>
 
         <input
           type="number"

@@ -124,7 +124,7 @@ const TopRatedSlidesManagement = () => {
       <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 w-full max-w-5xl">
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4 flex items-center">
-            <FaStar className="mr-2 text-yellow-500" />
+            <FaStar className="mr-2 text-blue-500" />
             {editingSlide ? 'Edit Top Rated Slide' : 'Add New Top Rated Slide'}
           </h2>
           <div className="grid grid-cols-1 gap-4">
@@ -184,7 +184,7 @@ const TopRatedSlidesManagement = () => {
                     </td>
                     <td className="py-3 px-4 text-gray-600">
                       <div className="flex items-center">
-                        <FaStar className="text-yellow-500 mr-1" />
+                        <FaStar className="text-blue-500 mr-1" />
                         {slide.rating || 0}
                       </div>
                     </td>
@@ -192,7 +192,7 @@ const TopRatedSlidesManagement = () => {
                     <td className="py-3 px-4">
                       <div className="flex justify-center space-x-2">
                         <button
-                          className="flex items-center bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition"
+                          className="flex items-center bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition"
                           onClick={() => startEditing(slide)}
                         >
                           <FaEdit className="mr-1" /> Edit

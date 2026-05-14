@@ -18,7 +18,7 @@ const StatsSection = () => {
       number: "99%",
       label: "Satisfaction Rate",
       icon: "⭐",
-      color: "from-yellow-500 to-yellow-600"
+      color: "from-cyan-500 to-blue-600"
     },
     {
       number: "24/7",
@@ -29,7 +29,7 @@ const StatsSection = () => {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-r from-gray-50 to-white">
+    <section className="py-16 bg-gradient-to-r from-blue-50 via-white to-indigo-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">

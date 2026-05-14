@@ -207,7 +207,7 @@ const UserDetailsModal = ({ user, onClose, isOnline }) => {
           {/* Shopping Cart */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <FaShoppingCart className="text-orange-500 mr-2" />
+              <FaShoppingCart className="text-indigo-500 mr-2" />
               Shopping Cart
             </h3>
             {user.cart && user.cart.items && user.cart.items.length > 0 ? (

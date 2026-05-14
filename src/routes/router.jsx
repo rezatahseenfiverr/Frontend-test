@@ -17,6 +17,7 @@ import UserProfile from "../pages/User";
 import OrdersUser from "../pages/OrdersUser";
 import OrderDetails from "../pages/OrderDetails";
 import OrderConfirmationPage from "../pages/OrderConfirmation";
+import WishlistPage from "../pages/WishlistPage";
 
 import AdminLogin from "../pages/AdminLogin";
 import AdminDashBoard from "../pages/AdminDashBoard";
@@ -42,11 +43,15 @@ import RelatedProductManagement from "../pages/RelatedProduct";
 import MeasureTypeAdminPage from "../pages/MeasureType";
 import AdminOrdersPage from "../pages/OrderAdmin";
 import ShippingAdmin from "../pages/ShippingAdmin";
+import PopupAdManagement from "../pages/AdminPopupAds";
+import BrandManagement from "../pages/AdminBrands";
 import AdminContacts from "../pages/AdminContacts";
 import NotFound from "../pages/NotFound";
 import AdminInventory from "../pages/AdminInventory";
 import AdminPOS from "../pages/AdminPOS";
 import AdminPOSOrders from "../pages/AdminPOSOrders";
+import AdminWishlists from "../pages/AdminWishlists";
+import AdminSeoAi from "../pages/AdminSeoAi";
 import { POSProvider } from "../context/POSContext";
 import QRScannerTest from "../components/QRScannerTest";
 import ForgotPassword from "../components/ForgotPassword";
@@ -67,6 +72,7 @@ export const router = createBrowserRouter([
       { path: "/cart", element: <CartPage /> },
       { path: "/checkout", element: <CheckoutPage /> },
       { path: "/qr-test", element: <QRScannerTest /> },
+      { path: "/wishlist", element: <WishlistPage /> },
       {
         path: "/profile",
         element: <UserLayout />,
@@ -112,12 +118,16 @@ export const router = createBrowserRouter([
               { path: "products/related", element: <RelatedProductManagement /> },
               { path: "products/measure-type", element: <MeasureTypeAdminPage /> },
               { path: "products/shipping", element: <ShippingAdmin /> },
+              { path: "products/brands", element: <BrandManagement /> },
+              { path: "products/popup-ads", element: <PopupAdManagement /> },
               { path: "orders", element: <AdminOrdersPage /> },
               { path: "contacts", element: <AdminContacts /> },
               { path: "inventory", element: <AdminInventory /> },
               { path: "pos", element: <POSProvider><AdminPOS /></POSProvider> },
               { path: "pos-orders", element: <AdminPOSOrders /> },
               { path: "qr-test", element: <QRScannerTest /> },
+              { path: "wishlists", element: <AdminWishlists /> },
+              { path: "seo-ai", element: <AdminSeoAi /> },
             ],
           },
         ],

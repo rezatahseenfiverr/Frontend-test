@@ -111,11 +111,12 @@ const ProductCRUDPage = () => {
     const stockStatus = totalStock === 0 
       ? { text: 'Out of Stock', color: 'text-red-600' }
       : totalStock < 10 
-        ? { text: `Low Stock (${totalStock})`, color: 'text-orange-600' }
+        ? { text: `Low Stock (${totalStock})`, color: 'text-indigo-600' }
         : { text: `In Stock (${totalStock})`, color: 'text-green-600' };
     
     return { 
       ...p, 
+      _brand: p.brand || '',
       _categoriesStr: categoriesStr, 
       _variantCount: variantCount, 
       _shippingLabel: shippingLabel, 
@@ -132,6 +133,7 @@ const ProductCRUDPage = () => {
     const matchesSearch = (
       product.name?.toLowerCase().includes(query) ||
       (product.sku && product.sku.toLowerCase().includes(query)) ||
+      (product._brand && product._brand.toLowerCase().includes(query)) ||
       (product._categoriesStr && product._categoriesStr.toLowerCase().includes(query)) ||
       (product._shippingNames && product._shippingNames.join(", ").toLowerCase().includes(query))
     );
@@ -221,7 +223,7 @@ const ProductCRUDPage = () => {
                 <span>In Stock: {filteredProducts.filter(p => p._totalStock > 10).length}</span>
               </div>
               <div className="flex items-center">
-                <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                <span className="w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>
                 <span>Low Stock: {filteredProducts.filter(p => p._totalStock > 0 && p._totalStock <= 10).length}</span>
               </div>
               <div className="flex items-center">
@@ -241,6 +243,7 @@ const ProductCRUDPage = () => {
               <tr>
                 <th className="py-2 px-4 border-b">Image</th>
                 <th className="py-2 px-4 border-b">Name</th>
+                <th className="py-2 px-4 border-b">Brand</th>
                 <th className="py-2 px-4 border-b">Price ($)</th>
                 <th className="py-2 px-4 border-b">SKU</th>
                 <th className="py-2 px-4 border-b">Category</th>
@@ -274,6 +277,7 @@ const ProductCRUDPage = () => {
                       />
                     </td>
                     <td className="py-2 px-4 border-b">{product.name}</td>
+                    <td className="py-2 px-4 border-b">{product._brand || '-'}</td>
                     <td className="py-2 px-4 border-b">{parseFloat(product.mainPrice).toFixed(2)}</td>
                     <td className="py-2 px-4 border-b">{product.sku || "N/A"}</td>
                     <td className="py-2 px-4 border-b">{product._categoriesStr || "N/A"}</td>
@@ -297,7 +301,7 @@ const ProductCRUDPage = () => {
                             {product._variantStockBreakdown.map((variant, idx) => (
                               <div key={idx} className="flex justify-between">
                                 <span>{variant.color}:</span>
-                                <span className={variant.stock === 0 ? 'text-red-500' : variant.stock < 5 ? 'text-orange-500' : 'text-green-600'}>
+                                <span className={variant.stock === 0 ? 'text-red-500' : variant.stock < 5 ? 'text-indigo-500' : 'text-green-600'}>
                                   {variant.stock}
                                 </span>
                               </div>
@@ -318,7 +322,7 @@ const ProductCRUDPage = () => {
                                     return (
                                       <div key={sizeIdx} className="flex justify-between">
                                         <span>{size}:</span>
-                                        <span className={stock === 0 ? 'text-red-500' : stock < 3 ? 'text-orange-500' : 'text-green-600'}>
+                                        <span className={stock === 0 ? 'text-red-500' : stock < 3 ? 'text-indigo-500' : 'text-green-600'}>
                                           {stock}
                                         </span>
                                       </div>
@@ -334,7 +338,7 @@ const ProductCRUDPage = () => {
                     <td className="py-2 px-4 border-b">{product._shippingLabel}</td>
                     <td className="py-2 px-4 border-b flex justify-center space-x-2">
                       <button
-                        className="flex items-center bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
+                        className="flex items-center bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition"
                         onClick={() => navigate(`./${product._id}`)}
                       >
                         <FaEdit className="mr-1" /> Edit

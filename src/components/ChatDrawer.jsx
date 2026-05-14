@@ -29,12 +29,32 @@ const ChatDrawer = () => {
     sendTypingIndicator,
     socket,
     activeRoom,
+    chatMode,
+    setChatMode,
+    aiMessages,
+    isAiLoading,
+    aiError,
+    clearAiError,
+    fetchAIChat,
+    clearAIChat,
   } = useUserChat();
 
   const [typingTimeout, setTypingTimeout] = useState(null);
 
   // Check if device is mobile
   const isMobile = () => window.innerWidth <= 768;
+
+  // Mode-aware computed values
+  const activeMessages = chatMode === "ai" ? aiMessages : messages;
+  const activeError = chatMode === "ai" ? aiError : error;
+  const canSend = chatMode === "ai" ? Boolean(inputMessage.trim()) && !isAiLoading : Boolean(inputMessage.trim()) && isConnected;
+  const activePlaceholder = chatMode === "ai" ? "Ask about orders, compare products..." : "Type your message...";
+
+  const handleModeSwitch = (mode) => {
+    setChatMode(mode);
+    clearError();
+    if (mode === "ai") fetchAIChat();
+  };
 
   // Draggable position state for desktop only
   const [position, setPosition] = useState({ x: null, y: null });
@@ -277,138 +297,130 @@ const ChatDrawer = () => {
           }}
         >
           <div
-            className={`p-3 rounded-t-lg flex justify-between items-center ${isConnected ? "bg-blue-600" : "bg-gray-500"} text-white cursor-move ${isDragging ? 'opacity-90' : ''}`}
+            className={`p-3 rounded-t-lg ${chatMode === "ai" ? "bg-gradient-to-r from-indigo-500 to-purple-600" : isConnected ? "bg-blue-600" : "bg-gray-500"} text-white cursor-move ${isDragging ? 'opacity-90' : ''}`}
             onMouseDown={startDrag}
             onTouchStart={startDrag}
           >
-            <div className="flex flex-col">
-              <h3 className="font-semibold">
-                {assignedAdmin ? `${assignedAdmin.firstName || 'Admin'}` : "Customer Support"}
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-semibold text-sm">
+                {chatMode === "ai" ? "AI Assistant" : (assignedAdmin ? `${assignedAdmin.firstName || 'Admin'}` : "Customer Support")}
               </h3>
-              <div className="flex items-center space-x-2 text-xs opacity-90">
-                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></span>
-                <span>{isConnected ? "Connected" : "Disconnected"}</span>
-                {assignedAdmin && (
-                  <>
-                    <span>•</span>
-                    <span>{isOnline ? "Online" : "Offline"}</span>
-                    {isOnline && (
-                      <div className="flex items-center space-x-1">
-                        <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-                        <span>Active</span>
-                      </div>
-                    )}
-                  </>
+              <div className="flex items-center gap-2">
+                {chatMode === "ai" && (
+                  <button onClick={clearAIChat} className="text-xs text-white/70 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded transition">Clear</button>
                 )}
+                <button onClick={closeChat} className="text-white hover:text-gray-200">✕</button>
               </div>
             </div>
-            <button onClick={closeChat} className="text-white hover:text-gray-200" aria-label="Close chat">✕</button>
+            <div className="flex items-center text-xs opacity-90">
+              <span className={`w-2 h-2 rounded-full mr-1 ${chatMode === "ai" ? 'bg-indigo-200' : isConnected ? 'bg-green-400' : 'bg-red-400'}`}></span>
+              <span>{chatMode === "ai" ? "Orders · Compare · Recommend" : (isConnected ? "Connected" : "Disconnected")}</span>
+            </div>
+          </div>
+
+          {/* Mode Tabs */}
+          <div className="flex border-b border-gray-200 bg-gray-50">
+            <button onClick={() => handleModeSwitch("support")} className={`flex-1 py-2 text-xs font-semibold transition ${chatMode==="support" ? "bg-white text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700"}`}>💬 Customer Care</button>
+            <button onClick={() => handleModeSwitch("ai")} className={`flex-1 py-2 text-xs font-semibold transition ${chatMode==="ai" ? "bg-white text-indigo-600 border-b-2 border-indigo-600" : "text-gray-500 hover:text-gray-700"}`}>🤖 AI Helper</button>
           </div>
 
           <div className="flex-1 p-3 overflow-y-auto">
-            {isLoading ? (
+            {chatMode === "support" && isLoading ? (
               <div className="flex flex-col justify-center items-center h-full space-y-2">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <p className="text-sm text-gray-500">Loading chat...</p>
-                {/* Debug info */}
-                <div className="text-xs text-gray-400 mt-2 text-center">
-                  <p>User: {user?._id ? 'Logged in' : 'Not logged in'}</p>
-                  <p>Room: {activeRoom?._id ? 'Exists' : 'Not found'}</p>
-                  <p>Socket: {isConnected ? 'Connected' : 'Disconnected'}</p>
-                  <p>Messages: {messages?.length || 0}</p>
-                  <button 
-                    onClick={retryLoadChat}
-                    className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
-                  >
-                    Manual Refresh
-                  </button>
-                </div>
+                <button onClick={retryLoadChat} className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">Refresh</button>
               </div>
-            ) : error ? (
+            ) : activeError ? (
               <div className="text-center text-red-500 mt-10 p-4">
-                <p className="mb-2">{error}</p>
-                <div className="space-x-2">
-                  <button 
-                    onClick={retryLoadChat} 
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                  >
-                    Retry
-                  </button>
-                  <button 
-                    onClick={closeChat} 
-                    className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-                  >
-                    Close
-                  </button>
-                </div>
+                <p className="mb-2">{activeError}</p>
+                {chatMode === "support" && <button onClick={retryLoadChat} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">Retry</button>}
               </div>
-            ) : messages.length === 0 ? (
+            ) : activeMessages.length === 0 ? (
               <div className="text-center text-gray-500 mt-10">
-                <p>Start a conversation with our support team</p>
-                <p className="text-sm mt-1">We're here to help!</p>
+                {chatMode === "ai" ? (
+                  <><p className="text-lg mb-1">🤖</p><p>I can track orders, compare products, or recommend items!</p></>
+                ) : (
+                  <><p>Start a conversation with our support team</p><p className="text-sm mt-1">We're here to help!</p></>
+                )}
               </div>
             ) : (
-              messages.map((msg, idx) => (
-                <div key={`${msg._id || idx}`} className={`mb-3 ${msg.senderType === "customer" ? "text-right" : "text-left"}`}>
-                  <div className={`inline-block px-4 py-2 rounded-lg break-words whitespace-pre-wrap ${msg.senderType === "customer" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"}`} style={{ maxWidth: '260px', wordBreak: 'break-word' }}>
-                    {msg.text}
-                    <div className="text-xs mt-1 opacity-70 flex items-center justify-end space-x-1">
-                      <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                      {msg.senderType === "customer" && (
-                        <span className={isMessageReadByAdmin(msg) ? "text-blue-300" : "text-gray-400"}>
-                          {isMessageReadByAdmin(msg) ? "✓✓" : "✓"}
-                        </span>
+              activeMessages.map((msg, idx) => {
+                const isUser = msg.senderType === "customer" || msg.role === "user";
+                const isAI = msg.senderType === "assistant" || msg.role === "assistant";
+                let bubbleClass = isUser ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800";
+                if (chatMode === "ai" && isAI) bubbleClass = "bg-indigo-50 text-gray-800 border border-indigo-100";
+                if (chatMode === "ai" && isUser) bubbleClass = "bg-indigo-600 text-white";
+                return (
+                  <div key={msg._id || idx} className={`mb-3 ${isUser ? "text-right" : "text-left"}`}>
+                    <div className={`inline-block px-4 py-2 rounded-2xl break-words whitespace-pre-wrap ${bubbleClass}`} style={{ maxWidth: '260px', wordBreak: 'break-word' }}>
+                      {msg.content || msg.text}
+                      {chatMode === "support" && isUser && (
+                        <div className="text-xs mt-1 opacity-70 flex justify-end">
+                          <span>{msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}) : ''}</span>
+                        </div>
                       )}
                     </div>
-                    {msg.senderType === "customer" && isMessageReadByAdmin(msg) && (
-                      <div className="text-xs opacity-70 text-right">
-                        Seen {formatReadTime(msg)}
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
-            
-            {/* Typing indicator */}
-            {isTyping && (
+
+            {/* AI loading */}
+            {chatMode === "ai" && isAiLoading && (
+              <div className="flex justify-start mb-4">
+                <div className="bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-2xl rounded-bl-md text-sm text-indigo-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" />
+                  <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay:"0.1s"}} />
+                  <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay:"0.2s"}} />
+                </div>
+              </div>
+            )}
+
+            {/* Support typing */}
+            {chatMode === "support" && isTyping && (
               <div className="text-left mb-4">
                 <div className="inline-block px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm">Typing</span>
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
+                  <span className="text-sm">Typing</span>
+                  <div className="flex space-x-1 inline-flex ml-1">
+                    <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" />
+                    <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{animationDelay:"0.1s"}} />
+                    <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{animationDelay:"0.2s"}} />
                   </div>
                 </div>
               </div>
             )}
-            
             <div ref={messagesEndRef} />
           </div>
 
           <div className="p-3 border-t">
-            <div className="flex">
+            <div className="flex gap-2">
               <input
                 type="text"
                 value={inputMessage}
                 onChange={(e) => {
                   setInputMessage(e.target.value);
-                  handleTyping();
+                  if (chatMode === "support") handleTyping();
                 }}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                placeholder="Type your message..."
-                className={`flex-1 border rounded-l-lg px-3 py-2 focus:outline-none ${isConnected ? "focus:ring-1 focus:ring-blue-500" : "cursor-not-allowed"}`}
-                disabled={!isConnected}
+                placeholder={activePlaceholder}
+                disabled={chatMode === "support" && !isConnected}
+                className={`flex-1 px-3 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none ${
+                  chatMode === "ai" ? "focus:ring-2 focus:ring-indigo-300" : "focus:ring-2 focus:ring-blue-300"
+                } disabled:opacity-50`}
               />
               <button
                 onClick={handleSend}
-                className={`px-4 py-2 rounded-r-lg transition ${isConnected && inputMessage.trim() ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-400 text-white cursor-not-allowed"}`}
-                disabled={!inputMessage.trim() || !isConnected}
+                disabled={!canSend}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                  canSend
+                    ? chatMode === "ai"
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-gray-300 text-gray-500"
+                }`}
               >
-                Send
+                {chatMode === "ai" && isAiLoading ? "..." : "Send"}
               </button>
             </div>
           </div>

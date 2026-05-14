@@ -122,7 +122,7 @@ const UserList = ({ users, onEdit, onDelete, onViewDetails, onlineUsers }) => {
                     {hasCart ? (
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <FaShoppingCart className="text-orange-500 text-sm" />
+                          <FaShoppingCart className="text-indigo-500 text-sm" />
                           <span className="text-sm font-medium text-gray-900">
                             {cartItems} items
                           </span>

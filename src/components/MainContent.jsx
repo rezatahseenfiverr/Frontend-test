@@ -283,7 +283,7 @@ const MainContent = () => {
         </div>
 
         {/* Inventory */}
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Inventory</p>
@@ -294,8 +294,8 @@ const MainContent = () => {
                 {dashboardData.inventory.lowStock} low stock
               </p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-full">
-              <FaBoxes className="text-orange-600 text-xl" />
+            <div className="p-3 bg-indigo-100 rounded-full">
+              <FaBoxes className="text-indigo-600 text-xl" />
             </div>
           </div>
         </div>
@@ -503,6 +503,155 @@ const MainContent = () => {
           </div>
         </div>
       )}
+
+      {/* AI SEO Management */}
+      <div className="mt-8 bg-white rounded-lg shadow-md p-6 border-l-4 border-emerald-400">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">AI SEO</h3>
+            <p className="text-sm text-gray-500">Auto-generates meta titles, descriptions, and keywords for every product</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                try {
+                  const token = getAdminToken();
+                  if (!token) { toast.error('Not authenticated'); return; }
+                  const res = await axios.post(`${API_URI}/api/seo/generate`, {}, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  toast.success(`✅ Generated SEO for ${res.data.count} products`);
+                } catch (err) {
+                  toast.error(err?.response?.data?.message || 'Failed');
+                }
+              }}
+              className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition"
+            >
+              Generate Pending
+            </button>
+            <button
+              onClick={async () => {
+                if (!confirm('Force-regenerate SEO for ALL products? This will use AI credits.')) return;
+                try {
+                  const token = getAdminToken();
+                  if (!token) { toast.error('Not authenticated'); return; }
+                  const res = await axios.post(`${API_URI}/api/seo/force`, {}, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  toast.success(`✅ Force-regenerated SEO for ${res.data.count} products`);
+                } catch (err) {
+                  toast.error(err?.response?.data?.message || 'Failed');
+                }
+              }}
+              className="px-3 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition"
+            >
+              Force All
+            </button>
+          </div>
+        </div>
+        <SeoStats tokenFn={getAdminToken} API_URI={API_URI} />
+      </div>
+
+      {/* AI Embeddings Management */}
+      <div className="mt-8 bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-400">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">AI Embeddings</h3>
+            <p className="text-sm text-gray-500">Vector search powers smarter product recommendations</p>
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                const token = getAdminToken();
+                if (!token) { toast.error('Not authenticated'); return; }
+                const res = await axios.post(`${API_URI}/api/embeddings/generate`, {}, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                toast.success(`✅ Generated ${res.data.count} embeddings`);
+              } catch (err) {
+                toast.error(err?.response?.data?.message || 'Failed to generate');
+              }
+            }}
+            className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-700 transition"
+          >
+            Generate All
+          </button>
+        </div>
+        <EmbeddingStats />
+      </div>
+    </div>
+  );
+};
+
+const EmbeddingStats = () => {
+  const [stats, setStats] = useState(null);
+  const API_URI = import.meta.env.VITE_API_URI || "http://localhost:5000";
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem("adminAccessToken") || localStorage.getItem("adminToken") || localStorage.getItem("adminRefreshToken") || localStorage.getItem("accessToken");
+        if (!token) return;
+        const res = await axios.get(`${API_URI}/api/embeddings/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStats(res.data);
+      } catch {}
+    })();
+  }, []);
+  if (!stats) return <div className="text-sm text-gray-400">Loading stats...</div>;
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
+      <div className="bg-gray-50 rounded-lg p-3 text-center">
+        <div className="text-2xl font-bold text-indigo-600">{stats.total}</div>
+        <div className="text-xs text-gray-500">Total Products</div>
+      </div>
+      <div className="bg-gray-50 rounded-lg p-3 text-center">
+        <div className="text-2xl font-bold text-green-600">{stats.withEmbedding}</div>
+        <div className="text-xs text-gray-500">Embedded</div>
+      </div>
+      <div className="bg-gray-50 rounded-lg p-3 text-center">
+        <div className="text-2xl font-bold text-orange-600">{stats.pending || 0}</div>
+        <div className="text-xs text-gray-500">Pending</div>
+      </div>
+      <div className="bg-gray-50 rounded-lg p-3 text-center">
+        <div className={`text-2xl font-bold ${stats.available ? "text-green-600" : "text-red-500"}`}>
+          {stats.available ? "✓" : "✗"}
+        </div>
+        <div className="text-xs text-gray-500">API Key</div>
+      </div>
+    </div>
+  );
+};
+
+const SeoStats = ({ tokenFn, API_URI }) => {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = tokenFn();
+        if (!token) return;
+        const res = await axios.get(`${API_URI}/api/seo/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStats(res.data);
+      } catch {}
+    })();
+  }, []);
+  if (!stats) return <div className="text-sm text-gray-400">Loading SEO stats...</div>;
+  return (
+    <div className="grid grid-cols-3 gap-4 mt-2">
+      <div className="bg-gray-50 rounded-lg p-3 text-center">
+        <div className="text-2xl font-bold text-emerald-600">{stats.total}</div>
+        <div className="text-xs text-gray-500">Total Products</div>
+      </div>
+      <div className="bg-gray-50 rounded-lg p-3 text-center">
+        <div className="text-2xl font-bold text-green-600">{stats.withSEO}</div>
+        <div className="text-xs text-gray-500">With SEO</div>
+      </div>
+      <div className="bg-gray-50 rounded-lg p-3 text-center">
+        <div className="text-2xl font-bold text-orange-600">{stats.pending || 0}</div>
+        <div className="text-xs text-gray-500">Pending</div>
+      </div>
     </div>
   );
 };

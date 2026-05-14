@@ -16,6 +16,7 @@ export const UserProvider = ({ children }) => {
   const [defaultPaymentMethod, setDefaultPaymentMethod] = useState(null);
   const [redirectPath, setRedirectPath] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [wishlist, setWishlist] = useState([]);
 
   const pickDefaultPaymentMethod = (methods = []) =>
     methods.find((m) => m.isDefault) || methods[0] || null;
@@ -122,6 +123,7 @@ export const UserProvider = ({ children }) => {
       setAddress(addr);
       setPaymentMethods(methods);
       setDefaultPaymentMethod(pickDefaultPaymentMethod(methods));
+      fetchWishlist();
       localStorage.setItem('user', JSON.stringify(freshUser));
     } catch (error) {
       console.error('Failed to fetch user data:', error);
@@ -176,6 +178,7 @@ export const UserProvider = ({ children }) => {
       localStorage.setItem('refreshToken', refreshToken);
 
       axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+      fetchWishlist();
       setRedirectPath('/');
     } catch (error) {
       console.error('Login error:', error);
@@ -275,7 +278,20 @@ export const UserProvider = ({ children }) => {
     await fetchUser();
   };
 
-  
+  const fetchWishlist = async () => {
+    try {
+      const data = await authRequest(`${API}/api/wishlist`, { method: 'GET' });
+      setWishlist(Array.isArray(data) ? data : []);
+    } catch { setWishlist([]); }
+  };
+
+  const toggleWishlist = async (productId) => {
+    try {
+      const data = await authRequest(`${API}/api/wishlist`, { method: 'POST', data: { productId } });
+      setWishlist(data.wishlist || []);
+      return data.wishlisted;
+    } catch { return false; }
+  };
 
   return (
     <UserContext.Provider
@@ -297,7 +313,10 @@ export const UserProvider = ({ children }) => {
         removePaymentMethod,
         makeDefaultPaymentMethod,
         editPaymentMethod,
-        getAuthHeader, // 👈 exposed for custom requests
+        getAuthHeader,
+        wishlist,
+        toggleWishlist,
+        fetchWishlist,
       }}
     >
       {children}

@@ -142,7 +142,7 @@ export default function OrderConfirmationPage() {
                   <dd className="mt-1 text-sm text-gray-900 capitalize">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       order.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
-                      order.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      order.paymentStatus === 'pending' ? 'bg-blue-100 text-blue-800' :
                       'bg-red-100 text-red-800'
                     }`}>
                       {order.paymentStatus}
@@ -219,7 +219,7 @@ export default function OrderConfirmationPage() {
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center">
               <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                order.orderStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                order.orderStatus === 'pending' ? 'bg-blue-100 text-blue-800' :
                 order.orderStatus === 'processing' ? 'bg-blue-100 text-blue-800' :
                 order.orderStatus === 'shipped' ? 'bg-indigo-100 text-indigo-800' :
                 order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :

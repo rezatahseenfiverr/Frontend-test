@@ -3,13 +3,16 @@ import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import io from 'socket.io-client';
 import Badge from '../components/Badge';
+import SEOHead from '../components/SEOHead';
 import { CartContext } from '../context/CartContext';
+import { UserContext } from '../context/UserContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaHeart, FaShare, FaStar, FaTruck, FaShieldAlt, FaUndo } from 'react-icons/fa';
 
 const ProductView = () => {
   const { addToCart } = useContext(CartContext);
+  const { isLoggedIn, toggleWishlist: toggleWish, wishlist, fetchWishlist } = useContext(UserContext);
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -26,6 +29,7 @@ const ProductView = () => {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const [realTimeUpdates, setRealTimeUpdates] = useState([]);
   const [shippingOptions, setShippingOptions] = useState([]);
   const [shippingLoading, setShippingLoading] = useState(true);
@@ -35,6 +39,7 @@ const ProductView = () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_API_URI}/api/products/${id}`);
       setProduct(response.data);
+      setLikesCount(response.data.likesCount || 0);
       console.log("Fetched product:", response.data);
 
       if (response.data.variants && response.data.variants.length > 0) {
@@ -176,6 +181,9 @@ const ProductView = () => {
             hideProgressBar: true,
           });
           break;
+        case 'like':
+          setLikesCount(updateData.likesCount);
+          break;
         case 'product_deleted':
           // Show notification that product is no longer available
           toast.warning('This product has been removed from the store.', {
@@ -229,6 +237,12 @@ const ProductView = () => {
       fetchRelatedProducts(product.categories);
     }
   }, [product]);
+
+  useEffect(() => {
+    if (wishlist.length > 0 && id) {
+      setIsWishlisted(wishlist.some(p => (p._id || p) === id));
+    }
+  }, [wishlist, id]);
 
   const handleVariantChange = (variant) => {
     setSelectedVariant(variant);
@@ -284,6 +298,13 @@ const ProductView = () => {
       return badges;
     }
     return [];
+  };
+
+  const handleLike = async () => {
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URI}/api/products/${id}/like`);
+      setLikesCount(res.data.likesCount);
+    } catch { toast.error('Failed to update like'); }
   };
 
   const handleAddToCart = () => {
@@ -368,7 +389,9 @@ const ProductView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <>
+      <SEOHead product={product} url={`/products/${id}`} />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <ToastContainer />
       {product && selectedVariant ? (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -404,8 +427,8 @@ const ProductView = () => {
                         key={index}
                         className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                           mainImage === image 
-                            ? 'border-yellow-500 ring-2 ring-yellow-300' 
-                            : 'border-gray-200 hover:border-yellow-300'
+                            ? 'border-blue-500 ring-2 ring-blue-300' 
+                            : 'border-gray-200 hover:border-indigo-300'
                         }`}
                         onClick={() => setMainImage(image)}
                       >
@@ -460,12 +483,12 @@ const ProductView = () => {
                   {selectedDiscountPrice ? (
                     <>
                                       <span className="text-2xl text-gray-400 line-through">BDT{selectedPrice}</span>
-                <span className="text-3xl text-yellow-600 font-bold">BDT{selectedDiscountPrice}</span>
+                <span className="text-3xl text-blue-600 font-bold">BDT{selectedDiscountPrice}</span>
                     </>
                   ) : (
                     <>
                                       <span className="text-2xl text-gray-400 line-through">BDT{product.mainPrice}</span>
-                <span className="text-3xl text-yellow-600 font-bold">BDT{product.discountPrice}</span>
+                <span className="text-3xl text-blue-600 font-bold">BDT{product.discountPrice}</span>
                     </>
                   )}
                   {product.mainBadgeName && product.mainBadgeColor && (
@@ -485,8 +508,8 @@ const ProductView = () => {
                           onClick={() => handleVariantChange(variant)}
                           className={`w-10 h-10 rounded-full border-4 transition-all duration-200 ${
                             selectedVariant.hexCode === variant.hexCode 
-                              ? 'border-yellow-500 scale-110 shadow-lg' 
-                              : 'border-gray-200 hover:border-yellow-300'
+                              ? 'border-blue-500 scale-110 shadow-lg' 
+                              : 'border-gray-200 hover:border-indigo-300'
                           }`}
                           aria-label={`Select color ${variant.colorName}`}
                         >
@@ -519,20 +542,20 @@ const ProductView = () => {
                               isOutOfStock
                                 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                                 : isSelected 
-                                  ? 'bg-yellow-500 text-white shadow-lg border-yellow-600' 
-                                  : 'bg-white text-gray-900 border-gray-300 hover:bg-yellow-50 hover:border-yellow-300'
+                                  ? 'bg-blue-500 text-white shadow-lg border-blue-600' 
+                                  : 'bg-white text-gray-900 border-gray-300 hover:bg-blue-50 hover:border-indigo-300'
                             }`}
                           >
                             <div className="flex flex-col items-center">
-                              <span className={isSelected ? 'text-white' : isOutOfStock ? 'text-gray-400' : 'text-yellow-700'}>
+                              <span className={isSelected ? 'text-white' : isOutOfStock ? 'text-gray-400' : 'text-blue-700'}>
                                 {size}
                               </span>
                               {selectedVariant.unitName && (
-                                <span className={`text-xs ${isSelected ? 'text-white' : isOutOfStock ? 'text-gray-400' : 'text-yellow-700'}`}>
+                                <span className={`text-xs ${isSelected ? 'text-white' : isOutOfStock ? 'text-gray-400' : 'text-blue-700'}`}>
                                   {selectedVariant.unitName}
                                 </span>
                               )}
-                              <span className={`text-xs mt-1 ${isOutOfStock ? 'text-red-500' : stock < 5 ? 'text-orange-500' : 'text-green-600'}`}>
+                              <span className={`text-xs mt-1 ${isOutOfStock ? 'text-red-500' : stock < 5 ? 'text-indigo-500' : 'text-green-600'}`}>
                                 {isOutOfStock ? 'Out of Stock' : `${stock} in stock`}
                                 {realTimeUpdates.some(update => 
                                   update.data?.size === size && 
@@ -552,7 +575,7 @@ const ProductView = () => {
                 {/* Shipping Info */}
                 <div className="mb-6 p-4 bg-gray-50 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
-                    <FaTruck className="text-yellow-600" />
+                    <FaTruck className="text-blue-600" />
                     <p className="text-base font-semibold text-gray-800">Shipping:</p>
                   </div>
                   <p className="text-gray-700 font-medium">
@@ -570,7 +593,7 @@ const ProductView = () => {
                     <ul className="mt-2 text-sm text-gray-600 space-y-1">
                       {getShippingOptions().map((opt, idx) => (
                         <li key={idx} className="flex items-center gap-2">
-                          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                           {opt.name} — BDT{Number(opt.charge).toFixed(2)} • {opt.estimatedDays} days
                         </li>
                       ))}
@@ -586,28 +609,44 @@ const ProductView = () => {
                 <div className="flex flex-col gap-3 mb-6">
                   <button
                     onClick={handleAddToCart}
-                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-lg font-bold px-6 py-4 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-bold px-6 py-4 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
                   >
                     Add to Cart
                   </button>
                   <div className="flex gap-3">
                     <button
-                      className="flex-1 bg-white border border-yellow-500 text-yellow-600 text-lg font-bold px-6 py-4 rounded-xl hover:bg-yellow-50 transition-all duration-200"
+                      className="flex-1 bg-white border border-blue-500 text-blue-600 text-lg font-bold px-6 py-4 rounded-xl hover:bg-blue-50 transition-all duration-200"
                       disabled
                     >
                       Buy Now
                     </button>
                     <button
-                      onClick={() => setIsWishlisted(!isWishlisted)}
-                      className={`p-4 rounded-xl border transition-all duration-200 ${
-                        isWishlisted 
-                          ? 'bg-red-500 text-white border-red-500' 
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-red-300'
-                      }`}
+                      onClick={handleLike}
+                      className="flex items-center gap-2 px-4 py-4 rounded-xl border transition-all duration-200 bg-white text-gray-600 border-gray-300 hover:border-blue-300"
+                      title="Like this product"
                     >
-                      <FaHeart size={20} />
+                      <FaHeart size={20} className="hover:text-red-500 transition" />
+                      <span className="text-sm font-semibold">{likesCount}</span>
                     </button>
-                    <button className="p-4 rounded-xl bg-white text-gray-600 border border-gray-300 hover:border-yellow-300 transition-all duration-200">
+                    {isLoggedIn && (
+                      <button
+                        onClick={async () => {
+                          const res = await toggleWish(id);
+                          setIsWishlisted(res);
+                        }}
+                        className={`p-4 rounded-xl border transition-all duration-200 ${
+                          isWishlisted 
+                            ? 'bg-blue-500 text-white border-blue-500' 
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-300'
+                        }`}
+                        title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                      >
+                        <svg className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                      </button>
+                    )}
+                    <button className="p-4 rounded-xl bg-white text-gray-600 border border-gray-300 hover:border-indigo-300 transition-all duration-200">
                       <FaShare size={20} />
                     </button>
                   </div>
@@ -616,15 +655,15 @@ const ProductView = () => {
                 {/* Trust Badges */}
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="flex flex-col items-center gap-2">
-                    <FaTruck className="text-2xl text-yellow-600" />
+                    <FaTruck className="text-2xl text-blue-600" />
                     <span className="text-xs text-gray-600">Fast Delivery</span>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <FaShieldAlt className="text-2xl text-yellow-600" />
+                    <FaShieldAlt className="text-2xl text-blue-600" />
                     <span className="text-xs text-gray-600">Secure Payment</span>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <FaUndo className="text-2xl text-yellow-600" />
+                    <FaUndo className="text-2xl text-blue-600" />
                     <span className="text-xs text-gray-600">Easy Returns</span>
                   </div>
                 </div>
@@ -644,18 +683,18 @@ const ProductView = () => {
                         <Link
                           to={`/products/${relatedProduct.productId}`}
                           key={relatedProduct.productId}
-                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-yellow-50 transition-all duration-200 group"
+                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition-all duration-200 group"
                         >
                           <img
                             src={relatedProduct.mainImage}
                             alt={relatedProduct.name}
-                            className="w-16 h-16 object-contain rounded-lg border border-gray-200 group-hover:border-yellow-300 transition-colors"
+                            className="w-16 h-16 object-contain rounded-lg border border-gray-200 group-hover:border-indigo-300 transition-colors"
                           />
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-yellow-600 transition-colors">
+                            <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
                               {relatedProduct.name}
                             </h3>
-                            <p className="text-sm text-yellow-600 font-bold">BDT{relatedProduct.mainPrice}</p>
+                            <p className="text-sm text-blue-600 font-bold">BDT{relatedProduct.mainPrice}</p>
                           </div>
                           {relatedProduct.mainBadgeName && relatedProduct.mainBadgeColor && (
                             <Badge
@@ -702,7 +741,7 @@ const ProductView = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Customer Reviews</h2>
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FaStar className="text-yellow-500" />
+                <FaStar className="text-blue-500" />
                 <span>{product.totalReviews || 0} reviews • {product.averageRating || 0} rating</span>
               </div>
             </div>
@@ -718,9 +757,9 @@ const ProductView = () => {
                       <div className="font-semibold text-gray-800">
                         {r.user?.firstName ? `${r.user.firstName} ${r.user?.lastName || ''}` : r.user?.email || 'User'}
                       </div>
-                      <div className="flex items-center gap-1 text-yellow-500">
+                      <div className="flex items-center gap-1 text-blue-500">
                         {[...Array(5)].map((_, i) => (
-                          <FaStar key={i} size={14} className={i < r.rating ? 'text-yellow-500' : 'text-gray-300'} />
+                          <FaStar key={i} size={14} className={i < r.rating ? 'text-blue-500' : 'text-gray-300'} />
                         ))}
                       </div>
                     </div>
@@ -742,7 +781,7 @@ const ProductView = () => {
                       return canEdit ? (
                         <div className="flex gap-2 mt-3">
                           <button
-                            className="px-3 py-1 text-xs rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-colors"
+                            className="px-3 py-1 text-xs rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                             onClick={() => {
                               setRating(r.rating);
                               setComment(r.comment || '');
@@ -787,7 +826,7 @@ const ProductView = () => {
                       <button 
                         key={s} 
                         onClick={() => setRating(s)} 
-                        className={`text-2xl transition-colors ${rating >= s ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'}`}
+                        className={`text-2xl transition-colors ${rating >= s ? 'text-blue-500' : 'text-gray-300 hover:text-blue-400'}`}
                       >
                         ★
                       </button>
@@ -798,7 +837,7 @@ const ProductView = () => {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Share your experience with this product..."
-                  className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent resize-none"
+                  className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   rows={4}
                 />
                 <div className="flex gap-3">
@@ -808,7 +847,7 @@ const ProductView = () => {
                     className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
                       submitting 
                         ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
-                        : 'bg-yellow-500 hover:bg-yellow-600 text-white transform hover:scale-105'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white transform hover:scale-105'
                     }`}
                   >
                     {submitting ? 'Submitting...' : 'Submit Review'}
@@ -846,12 +885,13 @@ const ProductView = () => {
       ) : (
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
             <p className="text-lg text-gray-500">Loading product details...</p>
           </div>
         </div>
       )}
     </div>
+    </>
   );
 };
 

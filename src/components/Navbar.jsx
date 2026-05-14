@@ -70,7 +70,7 @@ export default function AmazonNavbar() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
           ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200' 
-          : 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500'
+          : 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600'
       }`}>
         <div className="max-w-7xl mx-auto container-padding-mobile">
           <div className="flex items-center justify-between h-16">
@@ -80,7 +80,7 @@ export default function AmazonNavbar() {
               className="flex items-center gap-2 sm:gap-3 group"
             >
               <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden ${
-                isScrolled ? 'bg-yellow-500' : 'bg-white/20'
+                isScrolled ? 'bg-blue-500' : 'bg-white/20'
               }`}>
                 <img 
                   src="/Barvella.png" 
@@ -88,7 +88,7 @@ export default function AmazonNavbar() {
                   className="w-full h-full object-contain p-1"
                 />
               </div>
-              <span className={`font-bold text-lg sm:text-xl tracking-wide ${
+              <span className={`font-display font-bold text-lg sm:text-xl tracking-wide ${
                 isScrolled ? 'text-gray-900' : 'text-white'
               } group-hover:scale-105 transition-transform duration-300`}>
                 Barvella
@@ -106,7 +106,7 @@ export default function AmazonNavbar() {
                     onChange={handleSearchChange}
                     className={`w-full px-4 py-2 pl-10 rounded-full outline-none transition-all duration-300 ${
                       isScrolled 
-                        ? 'bg-gray-100 text-gray-900 border border-gray-200 focus:border-yellow-500' 
+                        ? 'bg-gray-100 text-gray-900 border border-gray-200 focus:border-blue-500' 
                         : 'bg-white/90 text-gray-900 border border-white/20 focus:border-white'
                     }`}
                   />
@@ -117,8 +117,8 @@ export default function AmazonNavbar() {
                     type="submit"
                     className={`absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 rounded-full font-semibold transition-all duration-300 ${
                       isScrolled 
-                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
-                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                        ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                        : 'bg-indigo-500 hover:bg-indigo-600 text-white'
                     }`}
                   >
                     Search
@@ -134,7 +134,7 @@ export default function AmazonNavbar() {
                           to={`/products/${product._id}`}
                           key={product._id}
                           onClick={handleProductClick}
-                          className="flex items-center gap-3 p-3 hover:bg-yellow-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                          className="flex items-center gap-3 p-3 hover:bg-blue-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
                         >
                           <img
                             src={product.mainImage}
@@ -163,7 +163,7 @@ export default function AmazonNavbar() {
               <NavLink
                 to="/products"
                 className={`font-semibold transition-all duration-300 hover:scale-105 ${
-                  isScrolled ? 'text-gray-700 hover:text-yellow-600' : 'text-white hover:text-yellow-200'
+                  isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white hover:text-blue-200'
                 }`}
               >
                 Products
@@ -171,7 +171,7 @@ export default function AmazonNavbar() {
               <NavLink
                 to="/contactus"
                 className={`font-semibold transition-all duration-300 hover:scale-105 ${
-                  isScrolled ? 'text-gray-700 hover:text-yellow-600' : 'text-white hover:text-yellow-200'
+                  isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white hover:text-blue-200'
                 }`}
               >
                 Contact Us
@@ -182,9 +182,18 @@ export default function AmazonNavbar() {
                 {isLoggedIn ? (
                   <>
                     <NavLink
+                      to="/wishlist"
+                      className={`p-2 rounded-full transition-all duration-300 hover:scale-110 ${
+                        isScrolled ? 'text-gray-700 hover:bg-blue-100' : 'text-white hover:bg-white/20'
+                      }`}
+                      title="Wishlist"
+                    >
+                      <FaHeart size={18} />
+                    </NavLink>
+                    <NavLink
                       to="/profile"
                       className={`p-2 rounded-full transition-all duration-300 hover:scale-110 ${
-                        isScrolled ? 'text-gray-700 hover:bg-yellow-100' : 'text-white hover:bg-white/20'
+                        isScrolled ? 'text-gray-700 hover:bg-blue-100' : 'text-white hover:bg-white/20'
                       }`}
                     >
                       <FaUser size={20} />
@@ -203,7 +212,7 @@ export default function AmazonNavbar() {
                     <NavLink
                       to="/login"
                       className={`font-semibold transition-all duration-300 hover:scale-105 ${
-                        isScrolled ? 'text-gray-700 hover:text-yellow-600' : 'text-white hover:text-yellow-200'
+                        isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white hover:text-blue-200'
                       }`}
                     >
                       Login
@@ -212,8 +221,8 @@ export default function AmazonNavbar() {
                       to="/signup"
                       className={`px-4 py-2 rounded-full font-semibold transition-all duration-300 hover:scale-105 ${
                         isScrolled 
-                          ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
-                          : 'bg-white hover:bg-gray-100 text-orange-600'
+                          ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                          : 'bg-white hover:bg-gray-100 text-indigo-600'
                       }`}
                     >
                       Sign Up
@@ -225,7 +234,7 @@ export default function AmazonNavbar() {
                 <NavLink
                   to="/cart"
                   className={`relative p-2 rounded-full transition-all duration-300 hover:scale-110 ${
-                    isScrolled ? 'text-gray-700 hover:bg-yellow-100' : 'text-white hover:bg-white/20'
+                    isScrolled ? 'text-gray-700 hover:bg-blue-100' : 'text-white hover:bg-white/20'
                   }`}
                 >
                   <FaShoppingCart size={20} />
@@ -250,52 +259,38 @@ export default function AmazonNavbar() {
           </div>
         </div>
 
-        {/* Mobile Search Bar */}
-        {showMobileMenu && (
-          <div className="lg:hidden px-4 pb-4">
-            <form onSubmit={handleSearchSubmit} className="relative">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="w-full px-4 py-2 pl-10 rounded-full bg-white/90 text-gray-900 border border-white/20 focus:border-white outline-none"
-              />
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-semibold"
-              >
-                Search
-              </button>
-            </form>
-          </div>
-        )}
       </nav>
 
       {/* Mobile Menu Overlay */}
       {showMobileMenu && (
-        <div className="lg:hidden fixed inset-0 top-16 z-40 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white shadow-xl rounded-b-2xl mx-4 mt-2 p-6 sm:p-8 animate-fade-in max-h-[calc(100vh-5rem)] overflow-y-auto">
-            {/* Mobile Logo */}
-            <div className="flex items-center justify-center mb-6 pb-4 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center overflow-hidden">
-                  <img 
-                    src="/Barvella.png" 
-                    alt="Barvella Logo" 
-                    className="w-full h-full object-contain p-1"
-                  />
-                </div>
-                <span className="font-bold text-xl text-gray-900">Barvella</span>
-              </div>
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setShowMobileMenu(false)}>
+          <div className="bg-white shadow-xl rounded-b-2xl mx-4 mt-20 p-6 sm:p-8 max-h-[calc(100vh-6rem)] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Search */}
+            <div className="mb-6">
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="w-full px-4 py-3 pl-10 rounded-xl bg-gray-100 text-gray-900 border border-gray-200 focus:border-blue-500 outline-none"
+                  autoFocus
+                />
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm"
+                >
+                  Search
+                </button>
+              </form>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <NavLink
                 to="/products"
                 onClick={() => setShowMobileMenu(false)}
-                className="flex items-center gap-3 p-4 rounded-xl hover:bg-yellow-50 transition-colors duration-200 text-gray-700 font-semibold touch-target"
+                className="flex items-center gap-3 p-4 rounded-xl hover:bg-blue-50 transition-colors duration-200 text-gray-700 font-semibold"
               >
                 <span className="text-2xl">🛍️</span>
                 <span className="text-lg">Products</span>
@@ -304,7 +299,7 @@ export default function AmazonNavbar() {
               <NavLink
                 to="/contactus"
                 onClick={() => setShowMobileMenu(false)}
-                className="flex items-center gap-3 p-4 rounded-xl hover:bg-yellow-50 transition-colors duration-200 text-gray-700 font-semibold touch-target"
+                className="flex items-center gap-3 p-4 rounded-xl hover:bg-blue-50 transition-colors duration-200 text-gray-700 font-semibold"
               >
                 <span className="text-2xl">📞</span>
                 <span className="text-lg">Contact Us</span>
@@ -315,32 +310,32 @@ export default function AmazonNavbar() {
                   <NavLink
                     to="/profile"
                     onClick={() => setShowMobileMenu(false)}
-                    className="flex items-center gap-3 p-4 rounded-xl hover:bg-yellow-50 transition-colors duration-200 text-gray-700 font-semibold touch-target"
+                    className="flex items-center gap-3 p-4 rounded-xl hover:bg-blue-50 transition-colors duration-200 text-gray-700 font-semibold"
                   >
                     <FaUser size={24} />
                     <span className="text-lg">Profile</span>
                   </NavLink>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 p-4 rounded-xl hover:bg-red-50 transition-colors duration-200 text-gray-700 font-semibold w-full text-left touch-target"
+                    className="flex items-center gap-3 p-4 rounded-xl hover:bg-red-50 transition-colors duration-200 text-gray-700 font-semibold w-full text-left"
                   >
                     <FaSignOutAlt size={24} />
                     <span className="text-lg">Logout</span>
                   </button>
                 </>
               ) : (
-                <div className="space-y-3 pt-2">
+                <div className="space-y-3 pt-3">
                   <NavLink
                     to="/login"
                     onClick={() => setShowMobileMenu(false)}
-                    className="block w-full text-center py-4 px-6 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-700 font-semibold touch-target text-lg"
+                    className="block w-full text-center py-3 px-6 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-gray-700 font-semibold text-lg"
                   >
                     Login
                   </NavLink>
                   <NavLink
                     to="/signup"
                     onClick={() => setShowMobileMenu(false)}
-                    className="block w-full text-center py-4 px-6 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition-colors duration-200 touch-target text-lg"
+                    className="block w-full text-center py-3 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors duration-200 text-lg"
                   >
                     Sign Up
                   </NavLink>

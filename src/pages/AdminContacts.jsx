@@ -145,7 +145,7 @@ const AdminContacts = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+        return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'in-progress':
         return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'resolved':
@@ -163,9 +163,9 @@ const AdminContacts = () => {
       case 'urgent':
         return 'text-red-600 bg-red-50 border-red-200';
       case 'high':
-        return 'text-orange-600 bg-orange-50 border-orange-200';
+        return 'text-indigo-600 bg-indigo-50 border-indigo-200';
       case 'medium':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+        return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'low':
         return 'text-green-600 bg-green-50 border-green-200';
       default:
@@ -177,7 +177,7 @@ const AdminContacts = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'pending':
-        return <FaClock className="text-yellow-600" />;
+        return <FaClock className="text-blue-600" />;
       case 'in-progress':
         return <FaExclamationTriangle className="text-blue-600" />;
       case 'resolved':
@@ -246,10 +246,10 @@ const AdminContacts = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.byStatus?.pending || 0}</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.byStatus?.pending || 0}</p>
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <FaClock className="text-yellow-600 text-xl" />
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <FaClock className="text-blue-600 text-xl" />
               </div>
             </div>
           </div>
@@ -475,7 +475,7 @@ const AdminContacts = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <select
                     id="status"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     defaultValue={selectedContact.status}
                   >
                     <option value="pending">Pending</option>
@@ -488,7 +488,7 @@ const AdminContacts = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
                   <select
                     id="priority"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     defaultValue={selectedContact.priority}
                   >
                     <option value="low">Low</option>
@@ -505,7 +505,7 @@ const AdminContacts = () => {
                 <textarea
                   id="adminNotes"
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Add notes about this contact..."
                   defaultValue={selectedContact.adminNotes || ''}
                 />
@@ -526,7 +526,7 @@ const AdminContacts = () => {
                     const adminNotes = document.getElementById('adminNotes').value;
                     handleStatusUpdate(selectedContact._id, status, priority, adminNotes);
                   }}
-                  className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
                 >
                   Update Contact
                 </button>

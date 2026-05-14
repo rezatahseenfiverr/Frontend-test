@@ -238,7 +238,7 @@ const QRScannerTest = () => {
 
             <div>
               <h2 className="text-lg font-semibold mb-2">Troubleshooting</h2>
-              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+              <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
                 <ul className="list-disc list-inside space-y-1">
                   <li><strong>Camera Access Red:</strong> Check browser permissions and try refreshing</li>
                   <li><strong>Backend API Red:</strong> Make sure the backend server is running on port 3000</li>

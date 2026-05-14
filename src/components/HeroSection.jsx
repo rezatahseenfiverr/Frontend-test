@@ -3,18 +3,18 @@ import { Link } from 'react-router-dom';
 
 function HeroSection() {
   const categories = [
-    { name: "Electronics", icon: "📱", color: "from-blue-500 to-blue-600", link: "/products?category=electronics" },
-    { name: "Fashion", icon: "👕", color: "from-pink-500 to-pink-600", link: "/products?category=fashion" },
-    { name: "Home & Garden", icon: "🏠", color: "from-green-500 to-green-600", link: "/products?category=home" },
-    { name: "Sports", icon: "⚽", color: "from-purple-500 to-purple-600", link: "/products?category=sports" },
-    { name: "Books", icon: "📚", color: "from-indigo-500 to-indigo-600", link: "/products?category=books" },
-    { name: "Toys", icon: "🎮", color: "from-red-500 to-red-600", link: "/products?category=toys" },
-    { name: "Health & Beauty", icon: "💄", color: "from-rose-500 to-rose-600", link: "/products?category=beauty" },
-    { name: "Automotive", icon: "🚗", color: "from-gray-500 to-gray-600", link: "/products?category=automotive" },
-    { name: "Music", icon: "🎵", color: "from-yellow-500 to-yellow-600", link: "/products?category=music" },
-    { name: "Office", icon: "💼", color: "from-teal-500 to-teal-600", link: "/products?category=office" },
-    { name: "Gaming", icon: "🎮", color: "from-orange-500 to-orange-600", link: "/products?category=gaming" },
-    { name: "Photography", icon: "📷", color: "from-cyan-500 to-cyan-600", link: "/products?category=photography" }
+    { name: "Electronics", icon: "📱", color: "from-blue-500 to-indigo-600", link: "/products?category=electronics" },
+    { name: "Fashion", icon: "👕", color: "from-sky-500 to-blue-600", link: "/products?category=fashion" },
+    { name: "Home & Garden", icon: "🏠", color: "from-cyan-500 to-sky-600", link: "/products?category=home" },
+    { name: "Sports", icon: "⚽", color: "from-indigo-500 to-violet-600", link: "/products?category=sports" },
+    { name: "Books", icon: "📚", color: "from-blue-500 to-cyan-600", link: "/products?category=books" },
+    { name: "Toys", icon: "🎮", color: "from-violet-500 to-indigo-600", link: "/products?category=toys" },
+    { name: "Health & Beauty", icon: "💄", color: "from-fuchsia-500 to-indigo-600", link: "/products?category=beauty" },
+    { name: "Automotive", icon: "🚗", color: "from-slate-500 to-blue-600", link: "/products?category=automotive" },
+    { name: "Music", icon: "🎵", color: "from-cyan-500 to-blue-600", link: "/products?category=music" },
+    { name: "Office", icon: "💼", color: "from-sky-500 to-indigo-600", link: "/products?category=office" },
+    { name: "Gaming", icon: "🎮", color: "from-indigo-500 to-purple-600", link: "/products?category=gaming" },
+    { name: "Photography", icon: "📷", color: "from-blue-500 to-cyan-600", link: "/products?category=photography" }
   ];
 
   return (
@@ -42,7 +42,7 @@ function HeroSection() {
       
       <div className="text-center mt-8">
         <Link to="/products">
-          <button className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-full hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg">
+          <button className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 transform hover:scale-105 shadow-lg">
             View All Categories
             <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />

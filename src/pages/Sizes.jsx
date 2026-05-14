@@ -143,7 +143,7 @@ const SizeManagement = () => {
                     <td className="py-2 px-4 border-b">{size.name}</td>
                     <td className="py-2 px-4 border-b flex justify-center space-x-2">
                       <button
-                        className="flex items-center bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
+                        className="flex items-center bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition"
                         onClick={() => startEditing(size)}
                       >
                         <FaEdit className="mr-1" /> Edit

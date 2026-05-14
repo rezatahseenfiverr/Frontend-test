@@ -387,7 +387,7 @@ function OrdersListPage() {
   };
 
   const statusColors = {
-    pending: 'text-yellow-600 bg-yellow-50 border-yellow-200',
+    pending: 'text-blue-600 bg-blue-50 border-blue-200',
     processing: 'text-blue-600 bg-blue-50 border-blue-200',
     shipped: 'text-indigo-600 bg-indigo-50 border-indigo-200',
     delivered: 'text-green-600 bg-green-50 border-green-200',
@@ -397,7 +397,7 @@ function OrdersListPage() {
   };
 
   const paymentColors = {
-    pending: 'text-yellow-600 bg-yellow-50 border-yellow-200',
+    pending: 'text-blue-600 bg-blue-50 border-blue-200',
     completed: 'text-green-600 bg-green-50 border-green-200',
     failed: 'text-red-600 bg-red-50 border-red-200',
     refunded: 'text-purple-600 bg-purple-50 border-purple-200',
@@ -408,7 +408,7 @@ function OrdersListPage() {
     connected: 'text-green-600 bg-green-50 border-green-200',
     disconnected: 'text-gray-600 bg-gray-50 border-gray-200',
     error: 'text-red-600 bg-red-50 border-red-200',
-    connecting: 'text-yellow-600 bg-yellow-50 border-yellow-200'
+    connecting: 'text-blue-600 bg-blue-50 border-blue-200'
   };
 
   const currency = useMemo(() => 'BDT', []);
@@ -434,7 +434,7 @@ function OrdersListPage() {
   const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
       case 'pending':
-        return <FaClock className="text-yellow-600" />;
+        return <FaClock className="text-blue-600" />;
       case 'processing':
         return <FaBox className="text-blue-600" />;
       case 'shipped':
@@ -454,7 +454,7 @@ function OrdersListPage() {
       <div className="max-w-6xl mx-auto py-8">
         <div className="flex justify-center items-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
             <p className="text-lg text-gray-600">Loading your orders...</p>
           </div>
         </div>
@@ -473,7 +473,7 @@ function OrdersListPage() {
           <p className="text-red-600 text-lg mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all duration-200 font-medium"
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 font-medium"
           >
             Try Again
           </button>
@@ -493,7 +493,7 @@ function OrdersListPage() {
           <p className="text-gray-600 mb-6">You haven't placed any orders yet.</p>
           <Link
             to="/"
-            className="inline-block px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all duration-200 font-medium"
+            className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 font-medium"
           >
             Start Shopping
           </Link>
@@ -509,7 +509,7 @@ function OrdersListPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
                 <FaBox className="text-white text-xl" />
               </div>
               My Orders
@@ -525,7 +525,7 @@ function OrdersListPage() {
               </>
             ) : connectionStatus === 'connecting' ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                 <span>Connecting...</span>
               </>
             ) : (
@@ -562,7 +562,7 @@ function OrdersListPage() {
               type="text"
               id="search"
               placeholder="Search by order ID..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -575,7 +575,7 @@ function OrdersListPage() {
             </label>
             <select
               id="status"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -594,7 +594,7 @@ function OrdersListPage() {
             </label>
             <select
               id="date"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
             >
@@ -631,7 +631,7 @@ function OrdersListPage() {
                 <input
                   type="date"
                   id="startDate"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
@@ -643,7 +643,7 @@ function OrdersListPage() {
                 <input
                   type="date"
                   id="endDate"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   min={startDate}
@@ -675,7 +675,7 @@ function OrdersListPage() {
               setStartDate('');
               setEndDate('');
             }}
-            className="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all duration-200 font-medium"
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 font-medium"
           >
             Clear Filters
           </button>
@@ -696,12 +696,12 @@ function OrdersListPage() {
                 className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-200"
               >
                 {/* Order Header */}
-                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 px-6 py-4 border-b border-gray-100">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <Link
                         to={`/profile/orders/${order.orderId}`}
-                        className="text-xl font-bold text-gray-900 hover:text-yellow-600 transition-colors duration-200"
+                        className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200"
                       >
                         Order #{order.orderId}
                       </Link>
@@ -722,7 +722,7 @@ function OrdersListPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-3">
                       <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <FaCreditCard className="text-yellow-500" />
+                        <FaCreditCard className="text-blue-500" />
                         Payment Info
                       </h4>
                       <div className="space-y-2">
@@ -741,7 +741,7 @@ function OrdersListPage() {
 
                     <div className="space-y-3">
                       <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <FaMapMarkerAlt className="text-yellow-500" />
+                        <FaMapMarkerAlt className="text-blue-500" />
                         Shipping Address
                       </h4>
                       {order.shippingAddress ? (
@@ -782,7 +782,7 @@ function OrdersListPage() {
 
                     <div className="space-y-3">
                       <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <FaBox className="text-yellow-500" />
+                        <FaBox className="text-blue-500" />
                         Order Summary
                       </h4>
                       <div className="space-y-2">
@@ -818,7 +818,7 @@ function OrdersListPage() {
                   {paymentDetails.length > 0 && (
                     <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                       <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        <FaCreditCard className="text-yellow-500" />
+                        <FaCreditCard className="text-blue-500" />
                         Payment Details
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -838,7 +838,7 @@ function OrdersListPage() {
                   {order.items?.length > 0 && (
                     <div>
                       <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                        <FaBox className="text-yellow-500" />
+                        <FaBox className="text-blue-500" />
                         Order Items
                       </h4>
                       <div className="space-y-3">

@@ -9,6 +9,7 @@ import io from 'socket.io-client';
 const ProductEdit = () => {
   // State variables for dropdown options
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [genders, setGenders] = useState([]);
@@ -21,6 +22,7 @@ const ProductEdit = () => {
   const [product, setProduct] = useState({
     name: '',
     categories: [],
+    brand: '',
     mainPrice: '',
     discountPrice: '',
     mainBadgeName: '',
@@ -60,8 +62,9 @@ const ProductEdit = () => {
   // Function to fetch dropdown options from the backend
   const fetchOptions = async () => {
     try {
-      const [categoriesRes, colorsRes, sizesRes, gendersRes, badgesRes, productRes, shippingRes] = await Promise.all([
+      const [categoriesRes, brandsRes, colorsRes, sizesRes, gendersRes, badgesRes, productRes, shippingRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_URI}/api/categories`),
+        axios.get(`${import.meta.env.VITE_API_URI}/api/brands`),
         axios.get(`${import.meta.env.VITE_API_URI}/api/colors`),
         axios.get(`${import.meta.env.VITE_API_URI}/api/sizes`),
         axios.get(`${import.meta.env.VITE_API_URI}/api/genders`),
@@ -69,8 +72,8 @@ const ProductEdit = () => {
         axios.get(`${import.meta.env.VITE_API_URI}/api/products/${id}`),
         axios.get(`${import.meta.env.VITE_API_URI}/api/shipping`),
       ]);
-
       setCategories(categoriesRes.data);
+      setBrands(brandsRes.data);
       setColors(colorsRes.data);
       setSizes(sizesRes.data);
       setGenders(gendersRes.data);
@@ -239,6 +242,8 @@ const ProductEdit = () => {
     const formData = new FormData();
     formData.append('name', product.name);
     formData.append('categories', JSON.stringify(product.categories));
+    formData.append('brand', product.brand);
+    formData.append('broadcast', product.broadcast ? 'true' : 'false');
     formData.append('mainPrice', product.mainPrice);
     formData.append('discountPrice', product.discountPrice);
     formData.append('mainBadgeName', product.mainBadgeName);
@@ -354,6 +359,28 @@ const ProductEdit = () => {
               </option>
             ))}
           </select>
+          <select
+            name="brand"
+            value={product.brand}
+            onChange={handleInputChange}
+            className="border border-gray-300 bg-white rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">No Brand</option>
+            {brands.map((brand) => (
+              <option key={brand._id} value={brand.name}>
+                {brand.name}
+              </option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 mb-4 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={product.broadcast || false}
+              onChange={(e) => setProduct(prev => ({ ...prev, broadcast: e.target.checked }))}
+              className="rounded border-gray-300"
+            />
+            Broadcast this product
+          </label>
           <input
             type="number"
             name="mainPrice"

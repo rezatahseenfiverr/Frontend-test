@@ -113,11 +113,11 @@ function CartPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <ToastContainer />
       
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 py-8 sm:py-12">
+      <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 py-8 sm:py-12">
         <div className="max-w-7xl mx-auto container-padding-mobile">
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">
@@ -141,7 +141,7 @@ function CartPage() {
               </p>
               <button
                 onClick={() => navigate('/products')}
-                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 transform hover:scale-105 shadow-lg touch-target text-sm sm:text-base"
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 transform hover:scale-105 shadow-lg touch-target text-sm sm:text-base"
               >
                 <FaShoppingBag className="inline mr-2" />
                 Start Shopping
@@ -206,7 +206,7 @@ function CartPage() {
                                 {/* Product Variants */}
                                 <div className="flex flex-wrap gap-1 sm:gap-2 mb-2 sm:mb-3">
                                   {item.size && (
-                                    <span className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <span className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                       {item.measureType}: {item.size} {item.unitName || ''}
                                     </span>
                                   )}
@@ -219,7 +219,7 @@ function CartPage() {
 
                                 {/* Price Display */}
                                 <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                                  <span className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-600">
+                                  <span className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">
                                     BDT{item.price.toFixed(2)}
                                   </span>
                                   {item.discountApplied > 0 && (
@@ -244,7 +244,7 @@ function CartPage() {
                                     type="text"
                                     value={localQuantities[itemIdentifier] || ''}
                                     onChange={(e) => handleQuantityChange(itemIdentifier, e.target.value)}
-                                    className="w-12 sm:w-16 h-7 sm:h-8 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                                    className="w-12 sm:w-16 h-7 sm:h-8 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                     disabled={isLoading || localLoading}
                                   />
                                   <button
@@ -280,7 +280,7 @@ function CartPage() {
             <div className="w-full lg:w-1/3">
               <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 sticky top-24">
                 <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900 flex items-center gap-2">
-                  <FaCreditCard className="text-yellow-500" />
+                  <FaCreditCard className="text-blue-500" />
                   Order Summary
                 </h3>
 
@@ -318,14 +318,14 @@ function CartPage() {
                             setCouponError(null);
                           }}
                           placeholder="Enter coupon code"
-                          className={`flex-1 px-4 py-3 border rounded-l-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 ${
+                          className={`flex-1 px-4 py-3 border rounded-l-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                             couponError ? 'border-red-500' : 'border-gray-300'
                           }`}
                           disabled={isLoading || localLoading}
                         />
                         <button
                           onClick={handleApplyCoupon}
-                          className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-3 rounded-r-xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-200 font-semibold disabled:opacity-50"
+                          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-r-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 font-semibold disabled:opacity-50"
                           disabled={isLoading || localLoading || !couponCode.trim()}
                         >
                           Apply
@@ -355,7 +355,7 @@ function CartPage() {
                   )}
                   <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-900">Total:</span>
-                    <span className="text-2xl font-bold text-yellow-600">BDT{formattedTotal}</span>
+                    <span className="text-2xl font-bold text-blue-600">BDT{formattedTotal}</span>
                   </div>
                 </div>
 
@@ -371,7 +371,7 @@ function CartPage() {
                   </button>
                   <button
                     onClick={() => navigate("/products")}
-                    className="w-full bg-white border-2 border-yellow-500 text-yellow-600 py-3 rounded-xl font-semibold hover:bg-yellow-50 transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full bg-white border-2 border-blue-500 text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     <FaArrowLeft />
                     Continue Shopping

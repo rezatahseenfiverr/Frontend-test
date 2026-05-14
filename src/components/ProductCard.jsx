@@ -59,7 +59,7 @@ const ProductCard = ({ Data, viewMode = "grid" }) => {
         {/* Product Details */}
         <div className="flex-1 min-w-0">
           {/* Product Name */}
-          <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-yellow-600 transition-colors duration-200">
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
             {name}
           </h2>
 
@@ -67,7 +67,7 @@ const ProductCard = ({ Data, viewMode = "grid" }) => {
           {parsedCategories.length > 0 && (
             <div className="mb-1 flex flex-wrap gap-1">
               {parsedCategories.slice(0, 2).map((cat, idx) => (
-                <span key={idx} className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">
+                <span key={idx} className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">
                   {cat}
                 </span>
               ))}
@@ -84,10 +84,10 @@ const ProductCard = ({ Data, viewMode = "grid" }) => {
             {discountPrice ? (
               <>
                 <span className="text-sm text-gray-400 line-through">BDT{mainPrice}</span>
-                <span className="text-lg text-yellow-700 font-bold">BDT{discountPrice}</span>
+                <span className="text-lg text-blue-700 font-bold">BDT{discountPrice}</span>
               </>
             ) : (
-              <span className="text-lg text-yellow-700 font-bold">BDT{mainPrice}</span>
+              <span className="text-lg text-blue-700 font-bold">BDT{mainPrice}</span>
             )}
           </div>
         </div>
@@ -95,7 +95,7 @@ const ProductCard = ({ Data, viewMode = "grid" }) => {
         {/* View Details Button */}
         <div className="flex-shrink-0">
           <Link to={`/products/${_id}`}>
-            <button className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg shadow transition-all duration-200 transform hover:scale-105 touch-target text-sm sm:text-base">
+            <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg shadow transition-all duration-200 transform hover:scale-105 touch-target text-sm sm:text-base">
               View Details
             </button>
           </Link>
@@ -106,7 +106,7 @@ const ProductCard = ({ Data, viewMode = "grid" }) => {
 
   // Grid view (default)
   return (
-    <div className="bg-white border border-yellow-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative flex flex-col group hover-lift">
+    <div className="bg-white border border-blue-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative flex flex-col group hover-lift">
       {/* Product Image */}
       <div className="relative flex items-center justify-center bg-white p-3 sm:p-4 h-48 sm:h-56">
         <img
@@ -128,7 +128,7 @@ const ProductCard = ({ Data, viewMode = "grid" }) => {
       {/* Product Details */}
       <div className="px-4 sm:px-6 pb-4 sm:pb-6 flex-1 flex flex-col">
         {/* Product Name */}
-        <h2 className="text-sm sm:text-base font-bold mb-1 text-gray-900 line-clamp-2 group-hover:text-yellow-600 transition-colors duration-200">
+        <h2 className="text-sm sm:text-base font-bold mb-1 text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
           {name}
         </h2>
 
@@ -136,7 +136,7 @@ const ProductCard = ({ Data, viewMode = "grid" }) => {
         {parsedCategories.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-1">
             {parsedCategories.slice(0, 2).map((cat, idx) => (
-              <span key={idx} className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">
+              <span key={idx} className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">
                 {cat}
               </span>
             ))}
@@ -153,16 +153,16 @@ const ProductCard = ({ Data, viewMode = "grid" }) => {
           {discountPrice ? (
             <>
               <span className="text-xs sm:text-sm text-gray-400 line-through">BDT{mainPrice}</span>
-              <span className="text-base sm:text-lg text-yellow-700 font-bold">BDT{discountPrice}</span>
+              <span className="text-base sm:text-lg text-blue-700 font-bold">BDT{discountPrice}</span>
             </>
           ) : (
-            <span className="text-base sm:text-lg text-yellow-700 font-bold">BDT{mainPrice}</span>
+            <span className="text-base sm:text-lg text-blue-700 font-bold">BDT{mainPrice}</span>
           )}
         </div>
 
         {/* View Details Button */}
         <Link to={`/products/${_id}`}>
-          <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 sm:py-3 rounded-lg shadow transition-all duration-200 mt-auto transform hover:scale-105 touch-target text-sm sm:text-base">
+          <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 rounded-lg shadow transition-all duration-200 mt-auto transform hover:scale-105 touch-target text-sm sm:text-base">
             View Details
           </button>
         </Link>

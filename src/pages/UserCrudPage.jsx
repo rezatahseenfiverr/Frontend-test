@@ -432,7 +432,7 @@ const UserCrudPage = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Users with Cart</p>
@@ -443,8 +443,8 @@ const UserCrudPage = () => {
                 Active carts
               </p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-full">
-              <FaShoppingCart className="text-orange-600 text-xl" />
+            <div className="p-3 bg-indigo-100 rounded-full">
+              <FaShoppingCart className="text-indigo-600 text-xl" />
             </div>
           </div>
         </div>

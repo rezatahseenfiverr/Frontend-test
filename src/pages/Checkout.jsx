@@ -343,11 +343,11 @@ const handleCheckout = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <ToastContainer />
       
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 py-12">
+      <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -641,9 +641,9 @@ const handleCheckout = async () => {
 
                     {/* Mobile payment transaction details */}
                     {isMobilePaymentSelected && (
-                      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl space-y-4">
-                        <h4 className="font-semibold text-yellow-800 flex items-center gap-2">
-                          <FaMobileAlt className="text-yellow-600" />
+                      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-4">
+                        <h4 className="font-semibold text-blue-800 flex items-center gap-2">
+                          <FaMobileAlt className="text-blue-600" />
                           Payment Instructions
                         </h4>
                         <div className="space-y-3">
@@ -671,7 +671,7 @@ const handleCheckout = async () => {
                               type="text"
                               value={transactionNumber}
                               onChange={(e) => setTransactionNumber(e.target.value)}
-                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                               placeholder="Enter your bKash/Nagad transaction ID"
                             />

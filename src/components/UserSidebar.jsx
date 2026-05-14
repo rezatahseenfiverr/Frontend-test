@@ -54,7 +54,7 @@ const UserSidebar = () => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
               <FaUser className="text-white text-lg" />
             </div>
             <div>
@@ -72,12 +72,12 @@ const UserSidebar = () => {
               to={item.path}
               className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                 isActive(item.path)
-                  ? "bg-yellow-50 border border-yellow-200 text-yellow-700 shadow-sm"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-yellow-600"
+                  ? "bg-blue-50 border border-blue-200 text-blue-700 shadow-sm"
+                  : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
               }`}
             >
               <div className={`transition-colors duration-200 ${
-                isActive(item.path) ? "text-yellow-600" : "text-gray-400 group-hover:text-yellow-500"
+                isActive(item.path) ? "text-blue-600" : "text-gray-400 group-hover:text-blue-500"
               }`}>
                 {item.icon}
               </div>
@@ -113,7 +113,7 @@ const UserSidebar = () => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
               <FaUser className="text-white text-sm" />
             </div>
             <div>
@@ -143,7 +143,7 @@ const UserSidebar = () => {
         {/* Mobile Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
               <FaUser className="text-white text-lg" />
             </div>
             <div>
@@ -168,12 +168,12 @@ const UserSidebar = () => {
               onClick={() => setIsMobileMenuOpen(false)}
               className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                 isActive(item.path)
-                  ? "bg-yellow-50 border border-yellow-200 text-yellow-700 shadow-sm"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-yellow-600"
+                  ? "bg-blue-50 border border-blue-200 text-blue-700 shadow-sm"
+                  : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
               }`}
             >
               <div className={`transition-colors duration-200 ${
-                isActive(item.path) ? "text-yellow-600" : "text-gray-400 group-hover:text-yellow-500"
+                isActive(item.path) ? "text-blue-600" : "text-gray-400 group-hover:text-blue-500"
               }`}>
                 {item.icon}
               </div>

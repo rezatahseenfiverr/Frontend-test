@@ -280,7 +280,7 @@ const AdminForm = ({ onSubmit, currentAdmin, onCancel }) => {
           </label>
         </div>
         {admin.superAdmin && (
-          <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded">
+          <p className="text-sm text-blue-700 bg-blue-50 p-2 rounded">
             ⚠️ Super admins have full system access and can manage other admins.
           </p>
         )}

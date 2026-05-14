@@ -1,14 +1,15 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
+import ModernShell from '../components/ModernShell';
 
 const MainLayout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <ModernShell>
       <Navbar />
       <main className="mobile-padding">
         {children}
       </main>
-    </div>
+    </ModernShell>
   );
 };
 

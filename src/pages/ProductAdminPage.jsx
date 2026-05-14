@@ -18,6 +18,8 @@ const ProductAdminPage = () => {
 
     // New Measure Type menu item
     { name: 'Measure Type', icon: '📐' },
+    { name: 'Brands', icon: '🏷️' },
+    { name: 'Popup Ads', icon: '🪟' },
   ];
 
   return (
